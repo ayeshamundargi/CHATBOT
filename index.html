@@ -1,0 +1,4296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXA — Clarity in Every Conversation</title>
+  <meta name="description" content="NEXA is an ambient AI workspace engineered for deep thinking, clean code, and distraction-free flow.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       1. Adaptive Root Scaling & Color Tokens
+       ========================================================================== */
+    html {
+      font-size: 16px;
+      color-scheme: dark;
+      background-color: #04050c;
+    }
+
+    @media (max-width: 1920px) {
+      html { font-size: 0.833333vw; }
+    }
+    @media (max-width: 1440px) {
+      html { font-size: 1.111111vw; }
+    }
+    @media (max-width: 1024px) {
+      html { font-size: 1.5625vw; }
+    }
+    @media (max-width: 640px) {
+      html { font-size: 4.444444vw; }
+    }
+
+    :root {
+      --hero-base: #04050c;
+      --heading: #eef0f6;
+      --body-muted: #b9becf;
+      --on-media: #ffffff;
+      --action-inverse: #ffffff;
+      --action-inverse-fg: #2f2f33;
+      --glass-fill: rgba(255, 255, 255, 0.08);
+      --glass-fill-hover: rgba(255, 255, 255, 0.13);
+      --glass-dark: rgba(8, 10, 22, 0.62);
+      --glass-border: rgba(255, 255, 255, 0.16);
+      --glass-border-strong: rgba(255, 255, 255, 0.28);
+      --scrim-strong: rgba(4, 5, 12, 0.68);
+      --scrim: rgba(4, 5, 12, 0.46);
+      --scrim-soft: rgba(4, 5, 12, 0.12);
+
+      /* Active Focus Mode accent (dynamically updated by JS) */
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.18);
+      --accent-glow: rgba(56, 189, 248, 0.45);
+      --mono-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    /* ==========================================================================
+       2. Base Reset, Browser UI Theming & Accessibility Utilities
+       ========================================================================== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100lvh;
+      font-family: "Onest", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--heading);
+      background-color: var(--hero-base);
+      overflow-x: clip;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    ::selection {
+      background-color: var(--accent-soft);
+      color: var(--on-media);
+    }
+
+    button, input, textarea, select {
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: 0;
+      background: transparent;
+      padding: 0;
+    }
+
+    :where(a:any-link, button, input, textarea, select, [tabindex]):focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .visually-hidden:where(:not(:focus-within, :active)) {
+      position: absolute !important;
+      clip-path: inset(50%) !important;
+      overflow: hidden !important;
+      width: 1px !important;
+      height: 1px !important;
+      margin: -1px !important;
+      padding: 0 !important;
+      border: 0 !important;
+      white-space: nowrap !important;
+    }
+
+    .skip-link {
+      position: fixed;
+      top: 0.75rem;
+      left: 0.75rem;
+      z-index: 100;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      background: var(--action-inverse);
+      color: var(--action-inverse-fg);
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    /* ==========================================================================
+       3. Layered Background: WebGL Fluid Canvas (z-0) + Radial Scrim (z-1)
+       ========================================================================== */
+    #fluid-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: var(--hero-base);
+      pointer-events: none;
+    }
+
+    .bg-scrim {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: radial-gradient(
+        115% 95% at 50% 46%,
+        var(--scrim-strong) 0%,
+        var(--scrim-strong) 24%,
+        var(--scrim) 52%,
+        var(--scrim-soft) 100%
+      );
+      transition: background 0.6s ease;
+    }
+
+    /* ==========================================================================
+       4. Application Shell & Entrance Choreography
+       ========================================================================== */
+    .app-shell {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      min-height: 100lvh;
+      max-height: 100dvh;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    /* Entrance reveal helpers (disabled for reduced motion) */
+    .reveal-item {
+      opacity: 1;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .app-shell:not(.is-ready) .reveal-item {
+        opacity: 0;
+        transform: translateY(0.85rem);
+      }
+      .app-shell.is-ready .reveal-item {
+        animation: lumen-fade-up 680ms cubic-bezier(0.215, 0.61, 0.355, 1) both;
+        animation-delay: var(--enter-delay, 0ms);
+      }
+    }
+
+    @keyframes lumen-fade-up {
+      from {
+        opacity: 0;
+        transform: translateY(0.85rem);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ==========================================================================
+       5. Top Navigation (z-20)
+       ========================================================================== */
+    .top-nav {
+      position: relative;
+      z-index: 20;
+      flex-shrink: 0;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 82rem;
+      margin-inline: auto;
+      padding: 1.25rem 1.75rem 0.75rem;
+    }
+
+    .brand-btn {
+      justify-self: start;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.625rem;
+      min-block-size: 2.5rem;
+      padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+      border-radius: 9999px;
+      color: var(--heading);
+      font-weight: 500;
+      font-size: 1.0625rem;
+      letter-spacing: -0.015em;
+      transition: opacity 0.2s ease;
+    }
+
+    .brand-btn:hover {
+      opacity: 0.85;
+    }
+
+    .brand-glyph {
+      width: 1.625rem;
+      height: 1.625rem;
+      flex-shrink: 0;
+      color: var(--heading);
+    }
+
+    /* Focus Mode Switcher Pill */
+    .mode-switcher {
+      justify-self: center;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem;
+      border-radius: 9999px;
+      background: var(--glass-fill);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+    }
+
+    .mode-btn {
+      position: relative;
+      min-block-size: 2.125rem;
+      padding: 0.375rem 0.875rem;
+      border-radius: 9999px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--body-muted);
+      white-space: nowrap;
+      transition: color 0.22s ease, background-color 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .mode-btn:hover {
+      color: var(--on-media);
+    }
+
+    .mode-btn[aria-pressed="true"] {
+      color: var(--on-media);
+      background: rgba(255, 255, 255, 0.14);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), 0 0 18px -4px var(--accent-glow);
+    }
+
+    .nav-actions {
+      justify-self: end;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .pill-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      min-block-size: 2.5rem;
+      padding: 0.5rem 1.125rem;
+      border-radius: 9999px;
+      background: var(--action-inverse);
+      color: var(--action-inverse-fg);
+      font-size: 0.875rem;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28);
+      transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .pill-cta:hover {
+      opacity: 0.92;
+      box-shadow: 0 8px 28px rgba(255, 255, 255, 0.16);
+    }
+
+    .pill-cta:active {
+      transform: scale(0.97);
+    }
+
+    .glass-icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-inline-size: 2.5rem;
+      min-block-size: 2.5rem;
+      padding: 0.5rem;
+      border-radius: 9999px;
+      background: var(--glass-fill);
+      border: 1px solid var(--glass-border);
+      color: var(--heading);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .glass-icon-btn:hover {
+      background: var(--glass-fill-hover);
+      border-color: var(--glass-border-strong);
+    }
+
+    .glass-icon-btn:active {
+      transform: scale(0.95);
+    }
+
+    .mobile-mode-bar {
+      display: none;
+    }
+
+    @media (max-width: 639px) {
+      .top-nav {
+        grid-template-columns: 1fr auto;
+        padding: 1rem 1rem 0.5rem;
+      }
+      .top-nav .mode-switcher {
+        display: none;
+      }
+      .mobile-mode-bar {
+        display: flex;
+        justify-content: center;
+        padding: 0 1rem 0.5rem;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 15;
+      }
+      .mobile-mode-bar .mode-switcher {
+        max-width: 100%;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .mobile-mode-bar .mode-btn {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.78rem;
+      }
+    }
+
+    /* ==========================================================================
+       6. Main Workspace (Hero <-> Active Chat Morph)
+       ========================================================================== */
+    .workspace {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 0 1.5rem;
+      transition: padding 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .app-shell[data-view="chat"] .workspace {
+      justify-content: flex-end;
+      padding-top: 0.25rem;
+      padding-bottom: 0.5rem;
+    }
+
+    /* --- Hero Intro Group --- */
+    .hero-intro {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 48rem;
+      width: 100%;
+      margin-bottom: 2rem;
+      transition:
+        opacity 0.38s ease,
+        transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        max-height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        margin-bottom 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      max-height: 36rem;
+    }
+
+    .app-shell[data-view="chat"] .hero-intro {
+      opacity: 0;
+      transform: translateY(-1.5rem) scale(0.97);
+      max-height: 0;
+      margin-bottom: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.375rem 0.9rem;
+      margin-bottom: 1.5rem;
+      border-radius: 9999px;
+      background: var(--glass-fill);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--body-muted);
+      letter-spacing: 0.01em;
+    }
+
+    .pulse-dot {
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 9999px;
+      background: #22d3ee;
+      box-shadow: 0 0 10px rgba(34, 211, 238, 0.85);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .pulse-dot {
+        animation: cyan-pulse 2.8s ease-in-out infinite;
+      }
+    }
+
+    @keyframes cyan-pulse {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(34, 211, 238, 0.85);
+      }
+      50% {
+        opacity: 0.55;
+        transform: scale(0.82);
+        box-shadow: 0 0 4px rgba(34, 211, 238, 0.35);
+      }
+    }
+
+    .hero-title {
+      margin: 0 0 1rem;
+      font-size: clamp(2.25rem, 4.1rem, 4.35rem);
+      font-weight: 500;
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+      color: var(--heading);
+    }
+
+    .hero-subtitle {
+      margin: 0;
+      max-width: 37rem;
+      font-size: 1.125rem;
+      font-weight: 400;
+      line-height: 1.55;
+      color: var(--body-muted);
+    }
+
+    /* Word-by-word reveal spans */
+    .word-clip {
+      display: inline-block;
+      overflow: hidden;
+      vertical-align: bottom;
+      padding-bottom: 0.08em;
+      margin-bottom: -0.08em;
+    }
+
+    .word-token {
+      display: inline-block;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .app-shell:not(.is-ready) .word-token {
+        opacity: 0;
+        transform: translateY(26px);
+      }
+      .app-shell.is-ready .hero-title .word-token {
+        animation: word-rise 720ms cubic-bezier(0.215, 0.61, 0.355, 1) both;
+        animation-delay: var(--word-delay, 480ms);
+      }
+      .app-shell.is-ready .hero-subtitle .word-token {
+        animation: word-rise 600ms cubic-bezier(0.215, 0.61, 0.355, 1) both;
+        animation-delay: var(--word-delay, 1150ms);
+      }
+    }
+
+    @keyframes word-rise {
+      from {
+        opacity: 0;
+        transform: translateY(26px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* --- Chat Thread Scroller --- */
+    .chat-scroll-wrap {
+      display: none;
+      width: 100%;
+      max-width: 52rem;
+      flex: 1;
+      min-height: 0;
+      margin-inline: auto;
+      position: relative;
+    }
+
+    .app-shell[data-view="chat"] .chat-scroll-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 0.75rem 0.25rem 1.25rem;
+      scrollbar-width: auto;
+      scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+    }
+
+    .chat-thread {
+      display: flex;
+      flex-direction: column;
+      gap: 1.125rem;
+      width: 100%;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .app-shell[data-view="chat"] .chat-scroll-wrap {
+        animation: thread-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+    }
+
+    @keyframes thread-enter {
+      from {
+        opacity: 0;
+        transform: translateY(1rem);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Messages */
+    .msg-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+      width: 100%;
+    }
+
+    .msg-row.is-user {
+      align-items: flex-end;
+    }
+
+    .msg-row.is-assistant {
+      align-items: flex-start;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .msg-row.is-fresh {
+        animation: msg-pop 340ms cubic-bezier(0.215, 0.61, 0.355, 1) both;
+      }
+    }
+
+    @keyframes msg-pop {
+      from {
+        opacity: 0;
+        transform: translateY(0.625rem);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .msg-bubble-user {
+      max-width: min(36rem, 86%);
+      padding: 0.8rem 1.15rem;
+      border-radius: 1.35rem 1.35rem 0.375rem 1.35rem;
+      background: rgba(255, 255, 255, 0.13);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      color: var(--on-media);
+      font-size: 0.96875rem;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.24);
+    }
+
+    .msg-card-ai {
+      position: relative;
+      width: 100%;
+      max-width: 100%;
+      padding: 1.125rem 1.25rem;
+      border-radius: 1.25rem;
+      background: var(--glass-dark);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      color: var(--heading);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.32);
+    }
+
+    .msg-ai-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.625rem;
+    }
+
+    .msg-ai-identity {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--body-muted);
+    }
+
+    .msg-ai-glyph {
+      width: 1.125rem;
+      height: 1.125rem;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .msg-mode-tag {
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      background: var(--accent-soft);
+      color: var(--heading);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+
+    .msg-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .msg-row:hover .msg-actions,
+    .msg-row:focus-within .msg-actions,
+    .msg-actions.always-visible {
+      opacity: 1;
+    }
+
+    @media (hover: none) {
+      .msg-actions {
+        opacity: 1;
+      }
+    }
+
+    .msg-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      min-block-size: 1.875rem;
+      padding: 0.25rem 0.55rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--body-muted);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: color 0.18s ease, background-color 0.18s ease;
+    }
+
+    .msg-action-btn:hover {
+      color: var(--on-media);
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    /* Markdown Typography inside AI cards */
+    .md-body {
+      font-size: 0.96875rem;
+      line-height: 1.65;
+      color: var(--heading);
+      word-break: break-word;
+    }
+
+    .md-body > *:first-child { margin-top: 0; }
+    .md-body > *:last-child { margin-bottom: 0; }
+
+    .md-body p {
+      margin: 0 0 0.75rem;
+    }
+
+    .md-body h2, .md-body h3, .md-body h4 {
+      margin: 1.15rem 0 0.5rem;
+      font-weight: 500;
+      color: var(--on-media);
+      line-height: 1.3;
+      letter-spacing: -0.015em;
+    }
+    .md-body h2 { font-size: 1.1875rem; }
+    .md-body h3 { font-size: 1.0625rem; }
+    .md-body h4 { font-size: 0.96875rem; }
+
+    .md-body ul, .md-body ol {
+      margin: 0 0 0.85rem;
+      padding-left: 1.35rem;
+    }
+
+    .md-body li {
+      margin: 0.28rem 0;
+    }
+
+    .md-body li::marker {
+      color: var(--accent);
+    }
+
+    .md-body strong {
+      font-weight: 500;
+      color: var(--on-media);
+    }
+
+    .md-body blockquote {
+      margin: 0.85rem 0;
+      padding: 0.5rem 0.9rem;
+      border-left: 2px solid var(--accent);
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 0 0.625rem 0.625rem 0;
+      color: var(--body-muted);
+    }
+
+    .md-body hr {
+      margin: 1rem 0;
+      border: 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .md-table-wrap {
+      margin: 0.85rem 0;
+      overflow-x: auto;
+      border-radius: 0.875rem;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(4, 5, 12, 0.55);
+    }
+
+    .md-body table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      text-align: left;
+    }
+
+    .md-body th,
+    .md-body td {
+      padding: 0.55rem 0.85rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+      vertical-align: top;
+    }
+
+    .md-body th {
+      font-weight: 500;
+      color: var(--on-media);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .md-body tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .md-body a {
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .md-body code:not(pre code) {
+      font-family: var(--mono-font);
+      font-size: 0.86em;
+      padding: 0.14em 0.42em;
+      border-radius: 0.375rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #f3f5fc;
+    }
+
+    .code-block {
+      margin: 0.85rem 0;
+      border-radius: 0.875rem;
+      overflow: hidden;
+      background: rgba(4, 5, 12, 0.82);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .code-block-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.45rem 0.875rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+      font-size: 0.75rem;
+      color: var(--body-muted);
+    }
+
+    .code-lang {
+      font-family: var(--mono-font);
+      text-transform: lowercase;
+      letter-spacing: 0.02em;
+    }
+
+    .copy-code-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      min-block-size: 1.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--heading);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      transition: background-color 0.18s ease, color 0.18s ease;
+    }
+
+    .copy-code-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .code-block pre {
+      margin: 0;
+      padding: 0.875rem 1rem;
+      overflow-x: auto;
+      font-family: var(--mono-font);
+      font-size: 0.84375rem;
+      line-height: 1.55;
+      color: #e6ebff;
+    }
+
+    /* Thinking / Typing Indicator */
+    .thinking-dots {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0;
+    }
+
+    .thinking-dots span {
+      width: 0.42rem;
+      height: 0.42rem;
+      border-radius: 9999px;
+      background: var(--accent);
+      opacity: 0.35;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .thinking-dots span {
+        animation: dot-wave 1.15s ease-in-out infinite;
+      }
+      .thinking-dots span:nth-child(2) { animation-delay: 0.16s; }
+      .thinking-dots span:nth-child(3) { animation-delay: 0.32s; }
+    }
+
+    @keyframes dot-wave {
+      0%, 80%, 100% {
+        opacity: 0.3;
+        transform: translateY(0);
+      }
+      40% {
+        opacity: 1;
+        transform: translateY(-0.22rem);
+      }
+    }
+
+    .stream-cursor {
+      display: inline-block;
+      width: 0.45rem;
+      height: 1em;
+      margin-left: 0.15rem;
+      vertical-align: -0.15em;
+      border-radius: 2px;
+      background: var(--accent);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .stream-cursor {
+        animation: cursor-blink 0.9s steps(2, start) infinite;
+      }
+    }
+
+    @keyframes cursor-blink {
+      to { opacity: 0.15; }
+    }
+
+    /* --- Prompt Dock & Starter Chips --- */
+    .composer-dock {
+      width: 100%;
+      max-width: 52rem;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .app-shell[data-view="hero"] .composer-dock {
+      max-width: 44rem;
+    }
+
+    .prompt-form {
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      gap: 0.75rem;
+      min-height: 4rem;
+      padding: 0.5rem 0.5rem 0.5rem 1.375rem;
+      border-radius: 2rem;
+      background: var(--glass-fill);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+    }
+
+    .prompt-form:focus-within {
+      border-color: var(--glass-border-strong);
+      background: rgba(255, 255, 255, 0.105);
+      box-shadow: 0 18px 52px rgba(0, 0, 0, 0.44), 0 0 0 1px var(--accent-soft), 0 0 28px -8px var(--accent-glow);
+    }
+
+    /* Auto-growing textarea (field-sizing + grid mirror fallback) */
+    .growable-textarea {
+      flex: 1;
+      min-width: 0;
+      display: grid;
+      align-items: center;
+      padding-block: 0.55rem;
+    }
+
+    .prompt-input {
+      width: 100%;
+      height: auto;
+      min-block-size: 1.5lh;
+      max-block-size: 8lh;
+      field-sizing: content;
+      border: 0;
+      background: transparent;
+      color: var(--on-media);
+      font-size: 1rem;
+      line-height: 1.5;
+      resize: none;
+      overflow-y: auto;
+      padding: 0;
+      margin: 0;
+    }
+
+    .prompt-input:focus {
+      outline: none;
+    }
+
+    .prompt-input::placeholder {
+      color: var(--body-muted);
+      opacity: 0.82;
+    }
+
+    @supports not (field-sizing: content) {
+      .growable-textarea::after,
+      .growable-textarea > textarea {
+        grid-area: 1 / 1 / 2 / 2;
+        font: inherit;
+        line-height: 1.5;
+        padding: 0;
+        border: 0;
+        max-height: 12rem;
+      }
+      .growable-textarea::after {
+        content: attr(data-replicated-value) " ";
+        white-space: pre-wrap;
+        word-break: break-word;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      .growable-textarea > textarea {
+        overflow-y: auto;
+      }
+    }
+
+    .ask-btn {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      min-block-size: 3rem;
+      padding: 0.65rem 1.35rem;
+      border-radius: 9999px;
+      background: var(--action-inverse);
+      color: var(--action-inverse-fg);
+      font-size: 0.9375rem;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+      transition: transform 0.18s ease, opacity 0.18s ease, background-color 0.18s ease;
+    }
+
+    .ask-btn:hover {
+      opacity: 0.92;
+    }
+
+    .ask-btn:active {
+      transform: scale(0.97);
+    }
+
+    .ask-btn.is-stop {
+      background: rgba(255, 255, 255, 0.14);
+      color: var(--on-media);
+      border: 1px solid var(--glass-border-strong);
+    }
+
+    @media (max-width: 639px) {
+      .workspace {
+        padding-inline: 1rem;
+      }
+      .prompt-form {
+        min-height: 3.5rem;
+        padding: 0.375rem 0.375rem 0.375rem 1rem;
+        border-radius: 1.75rem;
+        gap: 0.5rem;
+      }
+      .ask-btn {
+        min-block-size: 2.75rem;
+        padding: 0.55rem 1rem;
+        font-size: 0.875rem;
+      }
+    }
+
+    /* Starter Prompt Chips */
+    .starter-chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      max-width: 44rem;
+      transition: opacity 0.28s ease, max-height 0.35s ease, margin 0.35s ease;
+      max-height: 10rem;
+    }
+
+    .app-shell[data-view="chat"] .starter-chips {
+      opacity: 0;
+      max-height: 0;
+      overflow: hidden;
+      pointer-events: none;
+      margin: 0;
+    }
+
+    .chip-btn {
+      min-block-size: 2.25rem;
+      padding: 0.45rem 0.95rem;
+      border-radius: 9999px;
+      background: var(--glass-fill);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      font-size: 0.8125rem;
+      font-weight: 400;
+      color: var(--body-muted);
+      transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .chip-btn:hover {
+      color: var(--on-media);
+      background: var(--glass-fill-hover);
+      border-color: var(--glass-border-strong);
+      transform: translateY(-1px);
+    }
+
+    /* ==========================================================================
+       7. Footer (z-20)
+       ========================================================================== */
+    .site-footer {
+      position: relative;
+      z-index: 20;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      width: 100%;
+      max-width: 82rem;
+      margin-inline: auto;
+      padding: 0.65rem 1.75rem 1.15rem;
+      font-size: 0.78125rem;
+      color: var(--body-muted);
+    }
+
+    .footer-copy {
+      margin: 0;
+      opacity: 0.85;
+    }
+
+    .footer-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .ink-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      min-block-size: 1.75rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--body-muted);
+      font-size: 0.75rem;
+      transition: color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .ink-toggle-btn:hover {
+      color: var(--on-media);
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    @media (max-width: 639px) {
+      .site-footer {
+        padding: 0.5rem 1rem 0.85rem;
+        font-size: 0.72rem;
+      }
+    }
+
+    /* ==========================================================================
+       8. Modal Dialogs (Settings) — Modern Top-Layer + Scroll Containment
+       ========================================================================== */
+    dialog.modal-dialog {
+      margin: auto;
+      width: min(31rem, calc(100vw - 2rem));
+      max-height: min(88dvh, 44rem);
+      padding: 0;
+      border-radius: 1.5rem;
+      border: 1px solid var(--glass-border-strong);
+      background: rgba(10, 13, 28, 0.84);
+      backdrop-filter: blur(26px);
+      -webkit-backdrop-filter: blur(26px);
+      color: var(--heading);
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.65);
+      opacity: 0;
+      transition-property: opacity, transform, display, overlay;
+      transition-duration: 0.28s;
+      transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+      transition-behavior: allow-discrete;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      dialog.modal-dialog {
+        transform: scale(0.95) translateY(0.5rem);
+      }
+    }
+
+    dialog.modal-dialog:modal {
+      overscroll-behavior: contain;
+    }
+
+    dialog.modal-dialog::backdrop {
+      overflow: hidden;
+      overscroll-behavior: contain;
+      background-color: rgba(4, 5, 12, 0);
+      backdrop-filter: blur(0px);
+      transition-property: background-color, backdrop-filter, display, overlay;
+      transition-duration: 0.28s;
+      transition-timing-function: ease-out;
+      transition-behavior: allow-discrete;
+    }
+
+    dialog.modal-dialog[open]:where(:not([data-closing])) {
+      opacity: 1;
+      @starting-style {
+        opacity: 0;
+      }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      dialog.modal-dialog[open]:where(:not([data-closing])) {
+        transform: scale(1) translateY(0);
+        @starting-style {
+          transform: scale(0.95) translateY(0.5rem);
+        }
+      }
+    }
+
+    dialog.modal-dialog[open]:where(:not([data-closing]))::backdrop {
+      background-color: rgba(4, 5, 12, 0.66);
+      backdrop-filter: blur(6px);
+      @starting-style {
+        background-color: rgba(4, 5, 12, 0);
+        backdrop-filter: blur(0px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      dialog.modal-dialog,
+      dialog.modal-dialog::backdrop {
+        transition-duration: 0.1s;
+      }
+    }
+
+    .modal-inner {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+      color: var(--on-media);
+    }
+
+    .modal-subtitle {
+      margin: 0.25rem 0 0;
+      font-size: 0.875rem;
+      color: var(--body-muted);
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .field-label {
+      font-size: 0.84375rem;
+      font-weight: 500;
+      color: var(--heading);
+    }
+
+    .field-hint {
+      font-size: 0.78125rem;
+      color: var(--body-muted);
+    }
+
+    .input-row {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .glass-input,
+    .glass-select {
+      width: 100%;
+      min-block-size: 2.75rem;
+      padding: 0.55rem 0.9rem;
+      border-radius: 0.85rem;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--glass-border);
+      color: var(--on-media);
+      font-size: 0.90625rem;
+      transition: border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .glass-input:focus,
+    .glass-select:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+      border-color: transparent;
+      background: rgba(255, 255, 255, 0.09);
+    }
+
+    .glass-select option {
+      background: #0c1022;
+      color: #eef0f6;
+    }
+
+    .toggle-vis-btn {
+      position: absolute;
+      right: 0.5rem;
+      min-inline-size: 2.25rem;
+      min-block-size: 2.25rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.6rem;
+      color: var(--body-muted);
+      font-size: 0.75rem;
+    }
+
+    .toggle-vis-btn:hover {
+      color: var(--on-media);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .status-banner {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: 0.85rem;
+      background: var(--accent-soft);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      font-size: 0.8125rem;
+      color: var(--heading);
+    }
+
+    .modal-footer {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.625rem;
+      padding-top: 0.25rem;
+    }
+
+    .ghost-btn {
+      min-block-size: 2.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      background: var(--glass-fill);
+      border: 1px solid var(--glass-border);
+      color: var(--heading);
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: background-color 0.2s ease;
+    }
+
+    .ghost-btn:hover {
+      background: var(--glass-fill-hover);
+    }
+
+    /* ==========================================================================
+       9. Slide-Over History Drawer (Right-Side Scroll-Snap <dialog>)
+       ========================================================================== */
+    dialog.drawer {
+      --drawer-width: min(22.5rem, 86dvw, 100dvw - 1.5rem);
+      --drawer-backdrop: 0;
+      inset: 0;
+      width: auto;
+      height: auto;
+      max-width: none;
+      max-height: none;
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      border: 0;
+      overflow: visible;
+      color: var(--heading);
+    }
+
+    dialog.drawer:modal {
+      overscroll-behavior: contain;
+    }
+
+    dialog.drawer::backdrop {
+      overflow: hidden;
+      overscroll-behavior: contain;
+      background: #020308;
+      opacity: calc(var(--drawer-backdrop) * 0.65);
+    }
+
+    .drawer-scroller {
+      position: relative;
+      display: grid;
+      /* Column 1: full-viewport closed spacer; Column 2: right-aligned sheet */
+      grid-template-columns: 100% var(--drawer-width);
+      overflow-x: scroll;
+      overscroll-behavior: none;
+      scrollbar-width: none;
+      scroll-snap-type: x mandatory;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .drawer-scroller {
+        scroll-behavior: smooth;
+      }
+    }
+
+    /* Closed snap stop on the left spacer */
+    .drawer-scroller::before {
+      content: "";
+      scroll-snap-align: start;
+      scroll-initial-target: nearest;
+    }
+
+    .drawer-sheet {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      height: 100svh;
+      background: rgba(9, 12, 24, 0.88);
+      border-left: 1px solid var(--glass-border);
+      backdrop-filter: blur(26px);
+      -webkit-backdrop-filter: blur(26px);
+      color: var(--heading);
+      overflow-y: auto;
+      scroll-snap-align: end;
+      scrollbar-width: auto;
+      scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+      padding: 1.25rem;
+      gap: 1rem;
+    }
+
+    @supports (animation-timeline: scroll()) {
+      dialog.drawer {
+        timeline-scope: --drawer-fade;
+        animation: fade-drawer-backdrop linear both;
+        animation-timeline: --drawer-fade;
+      }
+
+      .drawer-scroller {
+        scroll-timeline: --drawer-fade x;
+      }
+
+      @property --drawer-backdrop {
+        syntax: "<number>";
+        inherits: true;
+        initial-value: 0;
+      }
+
+      @keyframes fade-drawer-backdrop {
+        0% { --drawer-backdrop: 0; }
+        100% { --drawer-backdrop: 1; }
+      }
+    }
+
+    .drawer-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .drawer-title {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+
+    .drawer-new-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .history-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.4rem 0.5rem 0.4rem 0.75rem;
+      border-radius: 0.95rem;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: background-color 0.18s ease, border-color 0.18s ease;
+    }
+
+    .history-item:hover {
+      background: rgba(255, 255, 255, 0.09);
+    }
+
+    .history-item.is-active {
+      background: var(--accent-soft);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    .history-select-btn {
+      flex: 1;
+      min-width: 0;
+      text-align: left;
+      padding: 0.25rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .history-item-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--heading);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-item-meta {
+      font-size: 0.72rem;
+      color: var(--body-muted);
+    }
+
+    .history-rename-input {
+      flex: 1;
+      min-width: 0;
+      padding: 0.28rem 0.5rem;
+      border-radius: 0.5rem;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--accent);
+      color: var(--on-media);
+      font-size: 0.875rem;
+    }
+
+    .history-item-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.15rem;
+      flex-shrink: 0;
+    }
+
+    .mini-icon-btn {
+      min-inline-size: 1.875rem;
+      min-block-size: 1.875rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.55rem;
+      color: var(--body-muted);
+      transition: color 0.18s ease, background-color 0.18s ease;
+    }
+
+    .mini-icon-btn:hover {
+      color: var(--on-media);
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .history-empty {
+      padding: 2rem 1rem;
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--body-muted);
+      border: 1px dashed rgba(255, 255, 255, 0.14);
+      border-radius: 1rem;
+    }
+
+    .drawer-foot {
+      padding-top: 0.75rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Toast feedback */
+    .toast {
+      position: fixed;
+      bottom: 4.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(0.5rem);
+      z-index: 60;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      background: rgba(16, 20, 38, 0.92);
+      border: 1px solid var(--glass-border-strong);
+      backdrop-filter: blur(14px);
+      color: var(--on-media);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+
+    .toast.is-visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <a href="#prompt-input" class="skip-link visually-hidden">Skip to prompt input</a>
+
+  <!-- z-0: WebGL Navier-Stokes Fluid Ink Simulation -->
+  <canvas id="fluid-canvas" aria-hidden="true"></canvas>
+
+  <!-- z-1: Radial Legibility Scrim -->
+  <div class="bg-scrim" aria-hidden="true"></div>
+
+  <!-- Main Interactive Shell -->
+  <div class="app-shell" id="app-shell" data-view="hero">
+    <!-- Top Navigation (z-20) -->
+    <header class="top-nav reveal-item" style="--enter-delay: 150ms;">
+      <button type="button" class="brand-btn" id="brand-home-btn" aria-label="NEXA Home">
+        <svg class="brand-glyph" aria-hidden="true" viewBox="0 0 28 28" fill="none">
+          <path d="M3 11.5C6.2 7 9.8 7 14 11.5C18.2 16 21.8 16 25 11.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M3 16.5C6.2 21 9.8 21 14 16.5C18.2 12 21.8 12 25 16.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.72"/>
+        </svg>
+        <span>NEXA</span>
+      </button>
+
+      <!-- Desktop Focus Mode Switcher (>=640px) -->
+      <div class="mode-switcher" role="group" aria-label="Focus mode" id="desktop-mode-switcher">
+        <button type="button" class="mode-btn" data-mode="deep-work" aria-pressed="true">Deep Work</button>
+        <button type="button" class="mode-btn" data-mode="code" aria-pressed="false">Code</button>
+        <button type="button" class="mode-btn" data-mode="creative" aria-pressed="false">Creative</button>
+        <button type="button" class="mode-btn" data-mode="concise" aria-pressed="false">Concise</button>
+      </div>
+
+      <div class="nav-actions">
+        <button type="button" class="glass-icon-btn" id="open-settings-icon" aria-label="API &amp; workspace settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09c-.658.003-1.25.396-1.51 1Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        <button type="button" class="pill-cta" id="primary-cta-btn">API Setup</button>
+
+        <button
+          type="button"
+          class="glass-icon-btn"
+          id="history-open-btn"
+          aria-label="Open chat history"
+          aria-expanded="false"
+          aria-controls="history-drawer"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 7h16M4 12h12M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Mobile Focus Mode Switcher (<640px) -->
+    <div class="mobile-mode-bar reveal-item" style="--enter-delay: 220ms;">
+      <div class="mode-switcher" role="group" aria-label="Focus mode" id="mobile-mode-switcher">
+        <button type="button" class="mode-btn" data-mode="deep-work" aria-pressed="true">Deep Work</button>
+        <button type="button" class="mode-btn" data-mode="code" aria-pressed="false">Code</button>
+        <button type="button" class="mode-btn" data-mode="creative" aria-pressed="false">Creative</button>
+        <button type="button" class="mode-btn" data-mode="concise" aria-pressed="false">Concise</button>
+      </div>
+    </div>
+
+    <!-- Center Workspace (Hero -> Floating Glassmorphic Chat Thread) -->
+    <main class="workspace" id="main-workspace">
+      <section class="hero-intro" id="hero-intro" aria-label="Welcome">
+        <div class="hero-badge reveal-item" style="--enter-delay: 320ms;">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          <span>NEXA &bull; Fluid Intelligence</span>
+        </div>
+
+        <h1 class="hero-title" id="hero-title" aria-label="Clarity in Every Conversation">
+          Clarity in Every Conversation
+        </h1>
+
+        <p class="hero-subtitle" id="hero-subtitle">
+          An ambient AI workspace engineered for deep thinking, clean code, and distraction-free flow.
+        </p>
+      </section>
+
+      <!-- Active Chat Thread -->
+      <section class="chat-scroll-wrap" id="chat-scroll-wrap" aria-label="Conversation">
+        <div class="chat-scroll" id="chat-scroll">
+          <div class="chat-thread" id="chat-thread" aria-live="off"></div>
+        </div>
+      </section>
+
+      <!-- Glass Prompt Bar + Starter Chips -->
+      <div class="composer-dock reveal-item" style="--enter-delay: 1450ms;">
+        <form class="prompt-form" id="prompt-form">
+          <label for="prompt-input" class="visually-hidden">Ask NEXA a question</label>
+          <div class="growable-textarea" id="growable-wrap" data-replicated-value="">
+            <textarea
+              id="prompt-input"
+              class="prompt-input"
+              rows="1"
+              placeholder="Ask NEXA anything..."
+              autocomplete="off"
+            ></textarea>
+          </div>
+          <button type="submit" class="ask-btn" id="ask-btn">Ask NEXA</button>
+        </form>
+
+        <div class="starter-chips" id="starter-chips" role="group" aria-label="Starter prompts">
+          <button type="button" class="chip-btn" data-prompt="Architect a scalable API">Architect a scalable API</button>
+          <button type="button" class="chip-btn" data-prompt="Explain quantum entanglement simply">Explain quantum entanglement simply</button>
+          <button type="button" class="chip-btn" data-prompt="Draft a hackathon pitch">Draft a hackathon pitch</button>
+          <button type="button" class="chip-btn" data-prompt="Optimize an async data pipeline">Optimize an async data pipeline</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer (z-20) -->
+    <footer class="site-footer reveal-item" style="--enter-delay: 1650ms;">
+      <p class="footer-copy">&copy; 2026 NEXA &mdash; engineered for fluid intelligence.</p>
+      <div class="footer-controls">
+        <button type="button" class="ink-toggle-btn" id="ink-motion-btn">Pause ink</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Live Status Announcer (outside dialogs so never inert during normal chat) -->
+  <div id="live-announcer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+  <div id="toast" class="toast" aria-hidden="true"></div>
+
+  <!-- ==========================================================================
+       Settings Modal (<dialog closedby="any">)
+       ========================================================================== -->
+  <dialog id="settings-dialog" class="modal-dialog" closedby="any" aria-labelledby="settings-title">
+    <form class="modal-inner" id="settings-form" method="dialog">
+      <div class="modal-header">
+        <div>
+          <h1 class="modal-title" id="settings-title">Workspace &amp; API Setup</h1>
+          <p class="modal-subtitle">Stored locally in your browser. Zero server tracking.</p>
+        </div>
+        <button type="button" class="glass-icon-btn" id="settings-close-btn" aria-label="Close settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="status-banner" id="connection-status-banner">
+        <span class="pulse-dot" aria-hidden="true"></span>
+        <span id="connection-status-text">Built-in Smart Demo Mode active</span>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="gemini-key-input">Gemini API Key</label>
+        <div class="input-row">
+          <input
+            id="gemini-key-input"
+            class="glass-input"
+            type="password"
+            placeholder="AIza..."
+            autocomplete="off"
+            spellcheck="false"
+            autofocus
+            style="padding-right: 3.75rem;"
+          >
+          <button type="button" class="toggle-vis-btn" id="toggle-key-vis" aria-label="Show API key">Show</button>
+        </div>
+        <span class="field-hint">Leave blank to use the built-in Focus-Mode demo responder.</span>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="gemini-model-select">Gemini Model</label>
+        <select id="gemini-model-select" class="glass-select">
+          <option value="gemini-3.8-flash">gemini-3.8-flash (Recommended • Fast &amp; capable)</option>
+          <option value="gemini-3.6-flash">gemini-3.6-flash (Stable Flash fallback)</option>
+          <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (High-throughput Lite)</option>
+          <option value="gemini-2.5-flash">gemini-2.5-flash (Legacy accounts only)</option>
+          <option value="custom">Custom model ID…</option>
+        </select>
+        <input
+          id="gemini-custom-model-input"
+          class="glass-input"
+          type="text"
+          aria-label="Custom Gemini model ID"
+          placeholder="e.g. gemini-3.8-flash"
+          autocomplete="off"
+          spellcheck="false"
+          hidden
+        >
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="custom-endpoint-input">Custom Backend Endpoint URL (optional)</label>
+        <input
+          id="custom-endpoint-input"
+          class="glass-input"
+          type="url"
+          placeholder="https://your-proxy.example.com/v1/chat/completions"
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <span class="field-hint">Overrides Gemini direct mode. Accepts OpenAI-compatible SSE or JSON.</span>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="ghost-btn" id="clear-settings-btn">Reset to Demo</button>
+        <button type="submit" class="pill-cta" value="save">Save Settings</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ==========================================================================
+       Slide-Over Chat History Drawer (<dialog> with scroll-snap & scroll-driven fade)
+       ========================================================================== -->
+  <dialog id="history-drawer" class="drawer" aria-labelledby="drawer-title">
+    <div class="drawer-scroller" id="drawer-scroller">
+      <aside class="drawer-sheet" id="drawer-sheet">
+        <div class="drawer-head">
+          <h1 class="drawer-title" id="drawer-title">Conversations</h1>
+          <button type="button" class="glass-icon-btn" id="history-close-btn" aria-label="Close history drawer" autofocus>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <button type="button" class="pill-cta drawer-new-btn" id="drawer-new-chat-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span>New Conversation</span>
+        </button>
+
+        <ul class="history-list" id="history-list"></ul>
+
+        <div class="drawer-foot">
+          <span class="field-hint" id="history-count-label">0 saved threads</span>
+          <button type="button" class="ghost-btn" id="clear-all-history-btn" style="min-block-size: 2rem; padding: 0.25rem 0.75rem; font-size: 0.75rem;">Clear All</button>
+        </div>
+      </aside>
+    </div>
+  </dialog>
+
+  <script type="module">
+    /* ==========================================================================
+       NEXA Client Architecture
+       ========================================================================== */
+
+    // --------------------------------------------------------------------------
+    // 1. Focus Modes, Fluid Palettes & System Prompts
+    // --------------------------------------------------------------------------
+    const CHATGPT_STYLE_CORE =
+      'Answer with the clarity, warmth, and helpfulness of ChatGPT: start directly with a clear answer (no robotic preambles), match response length to the question, use clean Markdown structure (headings, bold lead-in bullets, numbered steps, comparison tables when weighing options, and fenced code blocks with language tags), give concrete examples where helpful, and end complex or open-ended answers with a brief, natural follow-up offer.';
+
+    const FOCUS_MODES = {
+      'deep-work': {
+        label: 'Deep Work',
+        accent: '#38bdf8',
+        accentSoft: 'rgba(56, 189, 248, 0.18)',
+        accentGlow: 'rgba(56, 189, 248, 0.45)',
+        hueMin: 0.50,
+        hueMax: 0.62,
+        satMin: 0.85,
+        satMax: 0.98,
+        val: 0.96,
+        temperature: 0.6,
+        systemPrompt: `You are NEXA (Deep Work mode). ${CHATGPT_STYLE_CORE} Prioritize structured, first-principles explanations, clear trade-offs, and practical depth.`
+      },
+      'code': {
+        label: 'Code',
+        accent: '#34d399',
+        accentSoft: 'rgba(52, 211, 153, 0.18)',
+        accentGlow: 'rgba(52, 211, 153, 0.45)',
+        hueMin: 0.39,
+        hueMax: 0.50,
+        satMin: 0.82,
+        satMax: 0.96,
+        val: 0.94,
+        temperature: 0.3,
+        systemPrompt: `You are NEXA (Code mode). ${CHATGPT_STYLE_CORE} Lead with a concise summary, provide clean, idiomatic, ready-to-run code in fenced blocks, explain key choices and edge cases, and offer next steps like tests or refactoring.`
+      },
+      'creative': {
+        label: 'Creative',
+        accent: '#e879f9',
+        accentSoft: 'rgba(232, 121, 249, 0.18)',
+        accentGlow: 'rgba(232, 121, 249, 0.45)',
+        hueMin: 0.76,
+        hueMax: 0.91,
+        satMin: 0.85,
+        satMax: 0.98,
+        val: 0.98,
+        temperature: 0.88,
+        systemPrompt: `You are NEXA (Creative mode). ${CHATGPT_STYLE_CORE} Bring vivid, human phrasing, fresh metaphors, and multiple distinct angles while staying crisp and readable.`
+      },
+      'concise': {
+        label: 'Concise',
+        accent: '#93c5fd',
+        accentSoft: 'rgba(147, 197, 253, 0.18)',
+        accentGlow: 'rgba(147, 197, 253, 0.45)',
+        hueMin: 0.58,
+        hueMax: 0.68,
+        satMin: 0.42,
+        satMax: 0.84,
+        val: 0.98,
+        temperature: 0.4,
+        systemPrompt: `You are NEXA (Concise mode). ${CHATGPT_STYLE_CORE} Keep answers tight, scannable, and high-signal using short bullets and direct takeaways.`
+      }
+    };
+
+    const STORAGE_KEYS = {
+      threads: 'nexa_threads_v1',
+      activeId: 'nexa_active_thread_v1',
+      settings: 'nexa_settings_v1',
+      mode: 'nexa_mode_v1'
+    };
+
+    const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
+
+    const state = {
+      mode: localStorage.getItem(STORAGE_KEYS.mode) || 'deep-work',
+      threads: loadJSON(STORAGE_KEYS.threads, []),
+      activeThreadId: localStorage.getItem(STORAGE_KEYS.activeId) || null,
+      settings: loadJSON(STORAGE_KEYS.settings, {
+        apiKey: '',
+        model: DEFAULT_GEMINI_MODEL,
+        endpoint: '',
+        modelMigrated: true
+      }),
+      isStreaming: false,
+      abortController: null,
+      renamingId: null,
+      inkPaused: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      userScrolledUp: false
+    };
+
+    if (!state.settings.modelMigrated) {
+      if (!state.settings.model || /^gemini-2\./.test(state.settings.model)) {
+        state.settings.model = DEFAULT_GEMINI_MODEL;
+      }
+      state.settings.modelMigrated = true;
+      try {
+        localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(state.settings));
+      } catch {}
+    }
+
+    if (!FOCUS_MODES[state.mode]) state.mode = 'deep-work';
+
+    function loadJSON(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function saveThreads() {
+      try {
+        localStorage.setItem(STORAGE_KEYS.threads, JSON.stringify(state.threads));
+        if (state.activeThreadId) {
+          localStorage.setItem(STORAGE_KEYS.activeId, state.activeThreadId);
+        } else {
+          localStorage.removeItem(STORAGE_KEYS.activeId);
+        }
+      } catch {
+        // Ignore quota errors gracefully
+      }
+    }
+
+    // --------------------------------------------------------------------------
+    // 2. WebGL Navier-Stokes Fluid Ink Simulation
+    // --------------------------------------------------------------------------
+    class FluidInkSimulation {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.config = {
+          SIM_RESOLUTION: 200,
+          DYE_RESOLUTION: 512,
+          DENSITY_DISSIPATION: 0.958,
+          VELOCITY_DISSIPATION: 0.96,
+          PRESSURE: 0.8,
+          PRESSURE_ITERATIONS: 20,
+          CURL: 42,
+          SPLAT_RADIUS: 0.22,
+          SPLAT_FORCE: 6000,
+          SHADING: true,
+          BACK_COLOR: { r: 4, g: 5, b: 12 },
+          ORBIT_RADIUS: 300,
+          ORBIT_SPEED: 0.026,
+          ORBIT_START_DELAY: 700
+        };
+
+        this.palette = FOCUS_MODES[state.mode];
+        this.paused = state.inkPaused;
+        this.splatStack = [];
+        this.queuedWaves = [];
+        this.pointers = new Map();
+        this.orbitAngle = 0;
+        this.orbitActive = false;
+        this.lastOrbitPoint = null;
+        this.lastTime = performance.now();
+        this.gl = null;
+
+        this.init();
+      }
+
+      setPalette(modeKey) {
+        this.palette = FOCUS_MODES[modeKey] || FOCUS_MODES['deep-work'];
+      }
+
+      setPaused(paused) {
+        this.paused = paused;
+        if (!paused) {
+          this.lastTime = performance.now();
+        }
+      }
+
+      init() {
+        const params = {
+          alpha: false,
+          depth: false,
+          stencil: false,
+          antialias: false,
+          preserveDrawingBuffer: false
+        };
+
+        let gl = this.canvas.getContext('webgl2', params);
+        const isWebGL2 = Boolean(gl);
+        if (!gl) {
+          gl = this.canvas.getContext('webgl', params) || this.canvas.getContext('experimental-webgl', params);
+        }
+        if (!gl) return;
+
+        this.gl = gl;
+        this.isWebGL2 = isWebGL2;
+
+        let halfFloat;
+        let supportLinearFiltering;
+        if (isWebGL2) {
+          gl.getExtension('EXT_color_buffer_float');
+          supportLinearFiltering = gl.getExtension('OES_texture_float_linear');
+        } else {
+          halfFloat = gl.getExtension('OES_texture_half_float');
+          supportLinearFiltering = gl.getExtension('OES_texture_half_float_linear');
+        }
+
+        const halfFloatTexType = isWebGL2
+          ? gl.HALF_FLOAT
+          : (halfFloat ? halfFloat.HALF_FLOAT_OES : gl.UNSIGNED_BYTE);
+
+        let formatRGBA = this.getSupportedFormat(gl, isWebGL2 ? gl.RGBA16F : gl.RGBA, gl.RGBA, halfFloatTexType);
+        let formatRG = this.getSupportedFormat(gl, isWebGL2 ? gl.RG16F : gl.RGBA, isWebGL2 ? gl.RG : gl.RGBA, halfFloatTexType);
+        let formatR = this.getSupportedFormat(gl, isWebGL2 ? gl.R16F : gl.RGBA, isWebGL2 ? gl.RED : gl.RGBA, halfFloatTexType);
+
+        let texType = halfFloatTexType;
+        if (!formatRGBA) {
+          texType = gl.UNSIGNED_BYTE;
+          formatRGBA = { internalFormat: gl.RGBA, format: gl.RGBA };
+          formatRG = { internalFormat: gl.RGBA, format: gl.RGBA };
+          formatR = { internalFormat: gl.RGBA, format: gl.RGBA };
+        }
+
+        this.ext = {
+          formatRGBA,
+          formatRG: formatRG || formatRGBA,
+          formatR: formatR || formatRGBA,
+          halfFloatTexType: texType,
+          supportLinearFiltering: Boolean(supportLinearFiltering)
+        };
+
+        gl.clearColor(
+          this.config.BACK_COLOR.r / 255,
+          this.config.BACK_COLOR.g / 255,
+          this.config.BACK_COLOR.b / 255,
+          1.0
+        );
+
+        this.compileAllPrograms();
+        this.setupQuad();
+        this.resizeCanvas();
+        this.initFramebuffers();
+        this.bindPointerTracking();
+
+        // Trigger initial load burst: 34 splats + 8 queued waves
+        this.multipleSplats(34);
+        this.scheduleQueuedWaves(8);
+
+        setTimeout(() => {
+          this.orbitActive = true;
+        }, this.config.ORBIT_START_DELAY);
+
+        window.addEventListener('resize', () => this.onResize(), { passive: true });
+        this.loop();
+      }
+
+      getSupportedFormat(gl, internalFormat, format, type) {
+        if (!this.supportRenderTextureFormat(gl, internalFormat, format, type)) {
+          if (!this.isWebGL2) return null;
+          switch (internalFormat) {
+            case gl.R16F:
+              return this.getSupportedFormat(gl, gl.RG16F, gl.RG, type);
+            case gl.RG16F:
+              return this.getSupportedFormat(gl, gl.RGBA16F, gl.RGBA, type);
+            default:
+              return null;
+          }
+        }
+        return { internalFormat, format };
+      }
+
+      supportRenderTextureFormat(gl, internalFormat, format, type) {
+        const texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, 4, 4, 0, format, type, null);
+
+        const fbo = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+        const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+        gl.deleteFramebuffer(fbo);
+        gl.deleteTexture(texture);
+        return status === gl.FRAMEBUFFER_COMPLETE;
+      }
+
+      compileShader(type, source, keywords = []) {
+        const gl = this.gl;
+        let defs = '';
+        for (const kw of keywords) defs += `#define ${kw}\n`;
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, defs + source);
+        gl.compileShader(shader);
+        return shader;
+      }
+
+      createProgram(vertexShader, fragmentShader) {
+        const gl = this.gl;
+        const program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+
+        const uniforms = {};
+        const count = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+        for (let i = 0; i < count; i++) {
+          const info = gl.getActiveUniform(program, i);
+          uniforms[info.name] = gl.getUniformLocation(program, info.name);
+        }
+        return {
+          program,
+          uniforms,
+          bind: () => gl.useProgram(program)
+        };
+      }
+
+      compileAllPrograms() {
+        const gl = this.gl;
+        const baseVertex = this.compileShader(gl.VERTEX_SHADER, `
+          precision highp float;
+          attribute vec2 aPosition;
+          varying vec2 vUv;
+          varying vec2 vL;
+          varying vec2 vR;
+          varying vec2 vT;
+          varying vec2 vB;
+          uniform vec2 texelSize;
+          void main () {
+            vUv = aPosition * 0.5 + 0.5;
+            vL = vUv - vec2(texelSize.x, 0.0);
+            vR = vUv + vec2(texelSize.x, 0.0);
+            vT = vUv + vec2(0.0, texelSize.y);
+            vB = vUv - vec2(0.0, texelSize.y);
+            gl_Position = vec4(aPosition, 0.0, 1.0);
+          }
+        `);
+
+        const copyFrag = this.compileShader(gl.FRAGMENT_SHADER, `
+          precision mediump float;
+          precision mediump sampler2D;
+          varying highp vec2 vUv;
+          uniform sampler2D uTexture;
+          void main () {
+            gl_FragColor = texture2D(uTexture, vUv);
+          }
+        `);
+
+        const clearFrag = this.compileShader(gl.FRAGMENT_SHADER, `
+          precision mediump float;
+          precision mediump sampler2D;
+          varying highp vec2 vUv;
+          uniform sampler2D uTexture;
+          uniform float value;
+          void main () {
+            gl_FragColor = value * texture2D(uTexture, vUv);
+          }
+        `);
+
+        const displayFrag = this.compileShader(gl.FRAGMENT_SHADER, `
+          precision highp float;
+          precision highp sampler2D;
+          varying vec2 vUv;
+          varying vec2 vL;
+          varying vec2 vR;
+          varying vec2 vT;
+          varying vec2 vB;
+          uniform sampler2D uTexture;
+          uniform vec2 texelSize;
+          uniform vec3 uBackColor;
+
+          void main () {
+            vec3 c = texture2D(uTexture, vUv).rgb;
+            #ifdef SHADING
+              vec3 lc = texture2D(uTexture, vL).rgb;
+              vec3 rc = texture2D(uTexture, vR).rgb;
+              vec3 tc = texture2D(uTexture, vT).rgb;
+              vec3 bc = texture2D(uTexture, vB).rgb;
+
+              float dx = length(rc) - length(lc);
+              float dy = length(tc) - length(bc);
+
+              vec3 n = normalize(vec3(dx, dy, length(texelSize) * 1.15));
+              vec3 l = normalize(vec3(0.18, 0.32, 1.0));
+              float diffuse = clamp(dot(n, l) * 0.62 + 0.58, 0.65, 1.45);
+
+              vec3 viewDir = vec3(0.0, 0.0, 1.0);
+              vec3 halfVec = normalize(l + viewDir);
+              float spec = pow(max(dot(n, halfVec), 0.0), 18.0) * 0.22;
+
+              float lum = clamp(max(c.r, max(c.g, c.b)), 0.0, 1.0);
+              c = c * diffuse + vec3(spec) * smoothstep(0.06, 0.45, lum);
+            #endif
+
+            float density = clamp(max(c.r, max(c.g, c.b)), 0.0, 1.0);
+            vec3 finalColor = mix(uBackColor, uBackColor + c * 0.96, smoothstep(0.0, 0.08, density));
+            gl_FragColor = vec4(finalColor, 1.0);
+          }
+        `, this.config.SHADING ? ['SHADING'] : []);
+
+        const splatFrag = this.compileShader(gl.FRAGMENT_SHADER, `
+          precision highp float;
+          precision highp sampler2D;
+          varying vec2 vUv;
+          uniform sampler2D uTarget;
+          uniform float aspectRatio;
+          uniform vec3 color;
+          uniform vec2 point;
+          uniform float radius;
+          void main () {
+            vec2 p = vUv - point.xy;
+            p.x *= aspectRatio;
+            vec3 splat = exp(-dot(p, p) / radius) * color;
+            vec3 base = texture2D(uTarget, vUv).xyz;
+            gl_FragColor = vec4(base + splat, 1.0);
+          }
+        `);
+
+        const advectionFrag = this.compileShader(gl.FRAGMENT_SHADER, `
+          precision highp float;
+          precision highp sampler2D;
+          varying vec2 vUv;
+          uniform sampler2D uVelocity;
+          uniform sampler2D uSource;
+          uniform vec2 texelSize;
+          uniform vec2 dyeTexelSize;
+          uniform float dt;
+          uniform float dissipation;
+
+          vec4 bilerp (sampler2D sam, vec2 uv, vec2 tsize) {
+            vec2 st = uv / tsize - 0.5;
+            vec2 iuv = floor(st);
+            vec2 fuv = fract(st);
+            vec4 a = texture2D(sam, (iuv + vec2(0.5, 0.5)) * tsize);
+            vec4 b = texture2D(sam, (iuv + vec2(1.5, 0.5)) * tsize);
+            vec4 c = texture2D(sam, (iuv + vec2(0.5, 1.5)) * tsize);
+            vec4 d = texture2D(sam, (iuv + vec2(1.5, 1.5)) * tsize);
+            return mix(mix(a, b, fuv.x), mix(c, d, fuv.x), fuv.y);
+          }
+
+          void main () {
+            #ifdef MANUAL_FILTERING
+              vec2 coord = vUv - dt * bilerp(uVelocity, vUv, texelSize).xy * texelSize;
+              vec4 result = bilerp(uSource, coord, dyeTexelSize);
+            #else
+              vec2 coord = vUv - dt * texture2D(uVelocity, vUv).xy * texelSize;
+              vec4 result = texture2D(uSource, coord);
+            #endif
+            gl_FragColor = result * dissipation;
+          }
+        `, this.ext.supportLinearFiltering ? [] : ['MANUAL_FILTERING']);
+
+        const divergenceFrag = this.compileShader(gl.FRAGMENT_SHADER, `
+          precision mediump float;
+          precision mediump sampler2D;
+          varying highp vec2 vUv;
+          varying highp vec2 vL;
+          varying highp vec2 vR;
+          varying highp vec2 vT;
+          varying highp vec2 vB;
+          uniform sampler2D uVelocity;
+          void main () {
+            float L = texture2D(uVelocity, vL).x;
+            float R = texture2D(uVelocity, vR).x;
+            float T = texture2D(uVelocity, vT).y;
+            float B = texture2D(uVelocity, vB).y;
+            vec2 C = texture2D(uVelocity, vUv).xy;
+            if (vL.x < 0.0) { L = -C.x; }
+            if (vR.x > 1.0) { R = -C.x; }
+            if (vT.y > 1.0) { T = -C.y; }
+            if (vB.y < 0.0) { B = -C.y; }
+            float div = 0.5 * (R - L + T - B);
+            gl_FragColor = vec4(div, 0.0, 0.0, 1.0);
+          }
+        `);
+
+        const curlFrag = this.compileShader(gl.FRAGMENT_SHADER, `
+          precision mediump float;
+          precision mediump sampler2D;
+          varying highp vec2 vUv;
+          varying highp vec2 vL;
+          varying highp vec2 vR;
+          varying highp vec2 vT;
+          varying highp vec2 vB;
+          uniform sampler2D uVelocity;
+          void main () {
+            float L = texture2D(uVelocity, vL).y;
+            float R = texture2D(uVelocity, vR).y;
+            float T = texture2D(uVelocity, vT).x;
+            float B = texture2D(uVelocity, vB).x;
+            float vorticity = R - L - T + B;
+            gl_FragColor = vec4(0.5 * vorticity, 0.0, 0.0, 1.0);
+          }
+        `);
+
+        const vorticityFrag = this.compileShader(gl.FRAGMENT_SHADER, `
+          precision highp float;
+          precision highp sampler2D;
+          varying vec2 vUv;
+          varying vec2 vL;
+          varying vec2 vR;
+          varying vec2 vT;
+          varying vec2 vB;
+          uniform sampler2D uVelocity;
+          uniform sampler2D uCurl;
+          uniform float curl;
+          uniform float dt;
+          void main () {
+            float L = texture2D(uCurl, vL).x;
+            float R = texture2D(uCurl, vR).x;
+            float T = texture2D(uCurl, vT).x;
+            float B = texture2D(uCurl, vB).x;
+            float C = texture2D(uCurl, vUv).x;
+            vec2 force = 0.5 * vec2(abs(T) - abs(B), abs(R) - abs(L));
+            force /= length(force) + 0.0001;
+            force *= curl * C;
+            force.y *= -1.0;
+            vec2 vel = texture2D(uVelocity, vUv).xy;
+            vel += force * dt;
+            vel = min(max(vel, -1000.0), 1000.0);
+            gl_FragColor = vec4(vel, 0.0, 1.0);
+          }
+        `);
+
+        const pressureFrag = this.compileShader(gl.FRAGMENT_SHADER, `
+          precision mediump float;
+          precision mediump sampler2D;
+          varying highp vec2 vUv;
+          varying highp vec2 vL;
+          varying highp vec2 vR;
+          varying highp vec2 vT;
+          varying highp vec2 vB;
+          uniform sampler2D uPressure;
+          uniform sampler2D uDivergence;
+          void main () {
+            float L = texture2D(uPressure, vL).x;
+            float R = texture2D(uPressure, vR).x;
+            float T = texture2D(uPressure, vT).x;
+            float B = texture2D(uPressure, vB).x;
+            float divergence = texture2D(uDivergence, vUv).x;
+            float pressure = (L + R + B + T - divergence) * 0.25;
+            gl_FragColor = vec4(pressure, 0.0, 0.0, 1.0);
+          }
+        `);
+
+        const gradientSubtractFrag = this.compileShader(gl.FRAGMENT_SHADER, `
+          precision mediump float;
+          precision mediump sampler2D;
+          varying highp vec2 vUv;
+          varying highp vec2 vL;
+          varying highp vec2 vR;
+          varying highp vec2 vT;
+          varying highp vec2 vB;
+          uniform sampler2D uPressure;
+          uniform sampler2D uVelocity;
+          void main () {
+            float L = texture2D(uPressure, vL).x;
+            float R = texture2D(uPressure, vR).x;
+            float T = texture2D(uPressure, vT).x;
+            float B = texture2D(uPressure, vB).x;
+            vec2 velocity = texture2D(uVelocity, vUv).xy;
+            velocity.xy -= vec2(R - L, T - B);
+            gl_FragColor = vec4(velocity, 0.0, 1.0);
+          }
+        `);
+
+        this.programs = {
+          copy: this.createProgram(baseVertex, copyFrag),
+          clear: this.createProgram(baseVertex, clearFrag),
+          display: this.createProgram(baseVertex, displayFrag),
+          splat: this.createProgram(baseVertex, splatFrag),
+          advection: this.createProgram(baseVertex, advectionFrag),
+          divergence: this.createProgram(baseVertex, divergenceFrag),
+          curl: this.createProgram(baseVertex, curlFrag),
+          vorticity: this.createProgram(baseVertex, vorticityFrag),
+          pressure: this.createProgram(baseVertex, pressureFrag),
+          gradientSubtract: this.createProgram(baseVertex, gradientSubtractFrag)
+        };
+      }
+
+      setupQuad() {
+        const gl = this.gl;
+        gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, -1, 1, 1, 1, 1, -1]), gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0, 1, 2, 0, 2, 3]), gl.STATIC_DRAW);
+        gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(0);
+      }
+
+      blit(target) {
+        const gl = this.gl;
+        if (!target) {
+          gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+          gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        } else {
+          gl.viewport(0, 0, target.width, target.height);
+          gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
+        }
+        gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+      }
+
+      getResolution(resolution) {
+        const gl = this.gl;
+        let aspectRatio = gl.drawingBufferWidth / Math.max(1, gl.drawingBufferHeight);
+        if (aspectRatio < 1) aspectRatio = 1.0 / aspectRatio;
+        const min = Math.round(resolution);
+        const max = Math.round(resolution * aspectRatio);
+        return gl.drawingBufferWidth > gl.drawingBufferHeight
+          ? { width: max, height: min }
+          : { width: min, height: max };
+      }
+
+      createFBO(w, h, internalFormat, format, type, param) {
+        const gl = this.gl;
+        gl.activeTexture(gl.TEXTURE0);
+        const texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, param);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, param);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, w, h, 0, format, type, null);
+
+        const fbo = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+        gl.viewport(0, 0, w, h);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        return {
+          texture,
+          fbo,
+          width: w,
+          height: h,
+          texelSizeX: 1.0 / w,
+          texelSizeY: 1.0 / h,
+          attach(id) {
+            gl.activeTexture(gl.TEXTURE0 + id);
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            return id;
+          }
+        };
+      }
+
+      createDoubleFBO(w, h, internalFormat, format, type, param) {
+        let fbo1 = this.createFBO(w, h, internalFormat, format, type, param);
+        let fbo2 = this.createFBO(w, h, internalFormat, format, type, param);
+        return {
+          width: w,
+          height: h,
+          texelSizeX: fbo1.texelSizeX,
+          texelSizeY: fbo1.texelSizeY,
+          get read() { return fbo1; },
+          set read(v) { fbo1 = v; },
+          get write() { return fbo2; },
+          set write(v) { fbo2 = v; },
+          swap() {
+            const temp = fbo1;
+            fbo1 = fbo2;
+            fbo2 = temp;
+          }
+        };
+      }
+
+      resizeDoubleFBO(target, w, h, internalFormat, format, type, param) {
+        if (target.width === w && target.height === h) return target;
+        const newFBO = this.createDoubleFBO(w, h, internalFormat, format, type, param);
+        this.programs.copy.bind();
+        this.gl.uniform1i(this.programs.copy.uniforms.uTexture, target.read.attach(0));
+        this.blit(newFBO.read);
+        return newFBO;
+      }
+
+      initFramebuffers() {
+        const gl = this.gl;
+        const simRes = this.getResolution(this.config.SIM_RESOLUTION);
+        const dyeRes = this.getResolution(this.config.DYE_RESOLUTION);
+        const texType = this.ext.halfFloatTexType;
+        const rgba = this.ext.formatRGBA;
+        const rg = this.ext.formatRG;
+        const r = this.ext.formatR;
+        const filtering = this.ext.supportLinearFiltering ? gl.LINEAR : gl.NEAREST;
+
+        this.dye = this.dye
+          ? this.resizeDoubleFBO(this.dye, dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, filtering)
+          : this.createDoubleFBO(dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, filtering);
+
+        this.velocity = this.velocity
+          ? this.resizeDoubleFBO(this.velocity, simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering)
+          : this.createDoubleFBO(simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
+
+        this.divergence = this.createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
+        this.curl = this.createFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
+        this.pressure = this.createDoubleFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
+      }
+
+      resizeCanvas() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.max(1, Math.floor(window.innerWidth * dpr));
+        const height = Math.max(1, Math.floor(window.innerHeight * dpr));
+        if (this.canvas.width !== width || this.canvas.height !== height) {
+          this.canvas.width = width;
+          this.canvas.height = height;
+          return true;
+        }
+        return false;
+      }
+
+      onResize() {
+        if (this.resizeCanvas() && this.gl) {
+          this.initFramebuffers();
+        }
+      }
+
+      hsvToRgb(h, s, v) {
+        let r = 0, g = 0, b = 0;
+        const i = Math.floor(h * 6);
+        const f = h * 6 - i;
+        const p = v * (1 - s);
+        const q = v * (1 - f * s);
+        const t = v * (1 - (1 - f) * s);
+        switch (i % 6) {
+          case 0: r = v; g = t; b = p; break;
+          case 1: r = q; g = v; b = p; break;
+          case 2: r = p; g = v; b = t; break;
+          case 3: r = p; g = q; b = v; break;
+          case 4: r = t; g = p; b = v; break;
+          case 5: r = v; g = p; b = q; break;
+        }
+        return { r, g, b };
+      }
+
+      generateColor(intensity = 0.22) {
+        const p = this.palette;
+        const h = p.hueMin + Math.random() * (p.hueMax - p.hueMin);
+        const s = p.satMin + Math.random() * (p.satMax - p.satMin);
+        const rgb = this.hsvToRgb(h, s, p.val);
+        return {
+          r: rgb.r * intensity,
+          g: rgb.g * intensity,
+          b: rgb.b * intensity
+        };
+      }
+
+      correctRadius(radius) {
+        const aspectRatio = this.canvas.width / Math.max(1, this.canvas.height);
+        return aspectRatio > 1 ? radius * aspectRatio : radius;
+      }
+
+      splat(x, y, dx, dy, color, customRadius = null) {
+        if (!this.gl || !this.velocity || !this.dye) return;
+        const gl = this.gl;
+        const radius = this.correctRadius((customRadius ?? this.config.SPLAT_RADIUS) / 100.0);
+
+        this.programs.splat.bind();
+        gl.uniform1i(this.programs.splat.uniforms.uTarget, this.velocity.read.attach(0));
+        gl.uniform1f(this.programs.splat.uniforms.aspectRatio, this.canvas.width / Math.max(1, this.canvas.height));
+        gl.uniform2f(this.programs.splat.uniforms.point, x, y);
+        gl.uniform3f(this.programs.splat.uniforms.color, dx, dy, 0.0);
+        gl.uniform1f(this.programs.splat.uniforms.radius, radius);
+        this.blit(this.velocity.write);
+        this.velocity.swap();
+
+        gl.uniform1i(this.programs.splat.uniforms.uTarget, this.dye.read.attach(0));
+        gl.uniform3f(this.programs.splat.uniforms.color, color.r, color.g, color.b);
+        this.blit(this.dye.write);
+        this.dye.swap();
+      }
+
+      multipleSplats(count) {
+        for (let i = 0; i < count; i++) {
+          const color = this.generateColor(0.32);
+          const x = 0.12 + Math.random() * 0.76;
+          const y = 0.12 + Math.random() * 0.76;
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 420 + Math.random() * 780;
+          this.splat(x, y, Math.cos(angle) * speed, Math.sin(angle) * speed, color);
+        }
+      }
+
+      scheduleQueuedWaves(wavesCount) {
+        for (let i = 0; i < wavesCount; i++) {
+          setTimeout(() => {
+            if (!this.gl || this.paused) return;
+            const waveSplats = 4;
+            for (let j = 0; j < waveSplats; j++) {
+              const theta = (i / wavesCount) * Math.PI * 2 + j * 1.57;
+              const x = 0.5 + Math.cos(theta) * (0.14 + Math.random() * 0.22);
+              const y = 0.5 + Math.sin(theta) * (0.14 + Math.random() * 0.22);
+              const dx = Math.cos(theta + 1.1) * 520;
+              const dy = Math.sin(theta + 1.1) * 520;
+              this.splat(x, y, dx, dy, this.generateColor(0.26));
+            }
+          }, 140 * (i + 1));
+        }
+      }
+
+      triggerConversationPulse(kind) {
+        if (!this.gl) return;
+        if (kind === 'user') {
+          for (let i = 0; i < 6; i++) {
+            const x = 0.35 + Math.random() * 0.3;
+            const y = 0.14 + Math.random() * 0.08;
+            const dx = (Math.random() - 0.5) * 420;
+            const dy = 380 + Math.random() * 340;
+            this.splat(x, y, dx, dy, this.generateColor(0.28), 0.26);
+          }
+        } else if (kind === 'ai') {
+          for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2 + Math.random() * 0.3;
+            const x = 0.48 + Math.cos(angle) * 0.09;
+            const y = 0.52 + Math.sin(angle) * 0.09;
+            const dx = Math.cos(angle) * (450 + Math.random() * 280);
+            const dy = Math.sin(angle) * (450 + Math.random() * 280);
+            this.splat(x, y, dx, dy, this.generateColor(0.30), 0.28);
+          }
+        } else if (kind === 'mode') {
+          for (let i = 0; i < 6; i++) {
+            const x = 0.2 + Math.random() * 0.6;
+            const y = 0.25 + Math.random() * 0.5;
+            const angle = Math.random() * Math.PI * 2;
+            this.splat(x, y, Math.cos(angle) * 380, Math.sin(angle) * 380, this.generateColor(0.32), 0.28);
+          }
+        }
+      }
+
+      bindPointerTracking() {
+        const updatePointer = (id, clientX, clientY, colorBoost = 0.19) => {
+          const x = clientX / Math.max(1, window.innerWidth);
+          const y = 1.0 - clientY / Math.max(1, window.innerHeight);
+          const prev = this.pointers.get(id);
+          if (!prev) {
+            this.pointers.set(id, {
+              x, y, dx: 0, dy: 0, moved: false,
+              color: this.generateColor(colorBoost)
+            });
+            return;
+          }
+          const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+          let dx = (x - prev.x);
+          let dy = (y - prev.y);
+          if (aspect < 1) dx *= aspect;
+          if (aspect > 1) dy /= aspect;
+
+          prev.dx = dx;
+          prev.dy = dy;
+          prev.x = x;
+          prev.y = y;
+          prev.moved = Math.abs(dx) > 0 || Math.abs(dy) > 0;
+          if (Math.random() < 0.08) prev.color = this.generateColor(colorBoost);
+        };
+
+        window.addEventListener('pointermove', (e) => {
+          if (this.paused) return;
+          updatePointer(e.pointerId ?? 'mouse', e.clientX, e.clientY, 0.18);
+        }, { passive: true });
+
+        window.addEventListener('pointerdown', (e) => {
+          if (this.paused) return;
+          const x = e.clientX / Math.max(1, window.innerWidth);
+          const y = 1.0 - e.clientY / Math.max(1, window.innerHeight);
+          this.pointers.set(e.pointerId ?? 'mouse', {
+            x, y, dx: 0, dy: 0, moved: false,
+            color: this.generateColor(0.28)
+          });
+          const angle = Math.random() * Math.PI * 2;
+          this.splat(x, y, Math.cos(angle) * 260, Math.sin(angle) * 260, this.generateColor(0.24));
+        }, { passive: true });
+
+        window.addEventListener('pointerup', (e) => {
+          this.pointers.delete(e.pointerId ?? 'mouse');
+        }, { passive: true });
+      }
+
+      stepOrbitCursor(dt) {
+        if (!this.orbitActive) return;
+        const w = Math.max(1, window.innerWidth);
+        const h = Math.max(1, window.innerHeight);
+        const radiusPx = Math.min(this.config.ORBIT_RADIUS, Math.min(w, h) * 0.42);
+        this.orbitAngle += this.config.ORBIT_SPEED * (dt * 60);
+
+        const cx = w * 0.5 + Math.cos(this.orbitAngle) * radiusPx;
+        const cy = h * 0.5 + Math.sin(this.orbitAngle * 1.15) * (radiusPx * 0.68);
+        const x = cx / w;
+        const y = 1.0 - cy / h;
+
+        if (this.lastOrbitPoint) {
+          const dx = (x - this.lastOrbitPoint.x) * this.config.SPLAT_FORCE * 0.45;
+          const dy = (y - this.lastOrbitPoint.y) * this.config.SPLAT_FORCE * 0.45;
+          if (!this.orbitColor || Math.random() < 0.025) {
+            this.orbitColor = this.generateColor(0.14);
+          }
+          this.splat(x, y, dx, dy, this.orbitColor, this.config.SPLAT_RADIUS);
+        }
+        this.lastOrbitPoint = { x, y };
+      }
+
+      step(dt) {
+        const gl = this.gl;
+        gl.disable(gl.BLEND);
+
+        // Curl
+        this.programs.curl.bind();
+        gl.uniform2f(this.programs.curl.uniforms.texelSize, this.velocity.texelSizeX, this.velocity.texelSizeY);
+        gl.uniform1i(this.programs.curl.uniforms.uVelocity, this.velocity.read.attach(0));
+        this.blit(this.curl);
+
+        // Vorticity confinement
+        this.programs.vorticity.bind();
+        gl.uniform2f(this.programs.vorticity.uniforms.texelSize, this.velocity.texelSizeX, this.velocity.texelSizeY);
+        gl.uniform1i(this.programs.vorticity.uniforms.uVelocity, this.velocity.read.attach(0));
+        gl.uniform1i(this.programs.vorticity.uniforms.uCurl, this.curl.attach(1));
+        gl.uniform1f(this.programs.vorticity.uniforms.curl, this.config.CURL);
+        gl.uniform1f(this.programs.vorticity.uniforms.dt, dt);
+        this.blit(this.velocity.write);
+        this.velocity.swap();
+
+        // Divergence
+        this.programs.divergence.bind();
+        gl.uniform2f(this.programs.divergence.uniforms.texelSize, this.velocity.texelSizeX, this.velocity.texelSizeY);
+        gl.uniform1i(this.programs.divergence.uniforms.uVelocity, this.velocity.read.attach(0));
+        this.blit(this.divergence);
+
+        // Clear pressure
+        this.programs.clear.bind();
+        gl.uniform1i(this.programs.clear.uniforms.uTexture, this.pressure.read.attach(0));
+        gl.uniform1f(this.programs.clear.uniforms.value, this.config.PRESSURE);
+        this.blit(this.pressure.write);
+        this.pressure.swap();
+
+        // Jacobi pressure solver
+        this.programs.pressure.bind();
+        gl.uniform2f(this.programs.pressure.uniforms.texelSize, this.velocity.texelSizeX, this.velocity.texelSizeY);
+        gl.uniform1i(this.programs.pressure.uniforms.uDivergence, this.divergence.attach(0));
+        for (let i = 0; i < this.config.PRESSURE_ITERATIONS; i++) {
+          gl.uniform1i(this.programs.pressure.uniforms.uPressure, this.pressure.read.attach(1));
+          this.blit(this.pressure.write);
+          this.pressure.swap();
+        }
+
+        // Subtract pressure gradient
+        this.programs.gradientSubtract.bind();
+        gl.uniform2f(this.programs.gradientSubtract.uniforms.texelSize, this.velocity.texelSizeX, this.velocity.texelSizeY);
+        gl.uniform1i(this.programs.gradientSubtract.uniforms.uPressure, this.pressure.read.attach(0));
+        gl.uniform1i(this.programs.gradientSubtract.uniforms.uVelocity, this.velocity.read.attach(1));
+        this.blit(this.velocity.write);
+        this.velocity.swap();
+
+        // Advect velocity (dissipation parameterized for 60Hz)
+        const velDissipation = Math.pow(this.config.VELOCITY_DISSIPATION, dt * 60);
+        this.programs.advection.bind();
+        gl.uniform2f(this.programs.advection.uniforms.texelSize, this.velocity.texelSizeX, this.velocity.texelSizeY);
+        gl.uniform2f(this.programs.advection.uniforms.dyeTexelSize, this.velocity.texelSizeX, this.velocity.texelSizeY);
+        const velocityId = this.velocity.read.attach(0);
+        gl.uniform1i(this.programs.advection.uniforms.uVelocity, velocityId);
+        gl.uniform1i(this.programs.advection.uniforms.uSource, velocityId);
+        gl.uniform1f(this.programs.advection.uniforms.dt, dt);
+        gl.uniform1f(this.programs.advection.uniforms.dissipation, velDissipation);
+        this.blit(this.velocity.write);
+        this.velocity.swap();
+
+        // Advect dye
+        const dyeDissipation = Math.pow(this.config.DENSITY_DISSIPATION, dt * 60);
+        gl.uniform2f(this.programs.advection.uniforms.dyeTexelSize, this.dye.texelSizeX, this.dye.texelSizeY);
+        gl.uniform1i(this.programs.advection.uniforms.uVelocity, this.velocity.read.attach(0));
+        gl.uniform1i(this.programs.advection.uniforms.uSource, this.dye.read.attach(1));
+        gl.uniform1f(this.programs.advection.uniforms.dissipation, dyeDissipation);
+        this.blit(this.dye.write);
+        this.dye.swap();
+      }
+
+      render() {
+        const gl = this.gl;
+        this.programs.display.bind();
+        gl.uniform2f(
+          this.programs.display.uniforms.texelSize,
+          1.0 / Math.max(1, this.canvas.width),
+          1.0 / Math.max(1, this.canvas.height)
+        );
+        gl.uniform1i(this.programs.display.uniforms.uTexture, this.dye.read.attach(0));
+        gl.uniform3f(
+          this.programs.display.uniforms.uBackColor,
+          this.config.BACK_COLOR.r / 255,
+          this.config.BACK_COLOR.g / 255,
+          this.config.BACK_COLOR.b / 255
+        );
+        this.blit(null);
+      }
+
+      loop() {
+        requestAnimationFrame(() => this.loop());
+        if (!this.gl) return;
+
+        const now = performance.now();
+        const dt = Math.min((now - this.lastTime) / 1000, 0.016667);
+        this.lastTime = now;
+
+        if (!this.paused) {
+          for (const p of this.pointers.values()) {
+            if (p.moved) {
+              p.moved = false;
+              this.splat(
+                p.x,
+                p.y,
+                p.dx * this.config.SPLAT_FORCE,
+                p.dy * this.config.SPLAT_FORCE,
+                p.color
+              );
+            }
+          }
+          this.stepOrbitCursor(dt);
+          this.step(dt);
+        }
+        this.render();
+      }
+    }
+
+    // --------------------------------------------------------------------------
+    // 3. Safe Markdown Renderer & HTML Sanitizer
+    // --------------------------------------------------------------------------
+    const ALLOWED_MD_ELEMENTS = [
+      'p', 'br', 'strong', 'em', 'code', 'pre', 'h2', 'h3', 'h4',
+      'ul', 'ol', 'li', 'blockquote', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
+      'a', 'div', 'span', 'button'
+    ];
+    const ALLOWED_MD_ATTRS = ['class', 'href', 'target', 'rel', 'type', 'aria-label', 'scope'];
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function sanitizeUrl(url) {
+      try {
+        const parsed = new URL(url, window.location.href);
+        if (parsed.protocol === 'https:' || parsed.protocol === 'http:' || parsed.protocol === 'mailto:') {
+          return parsed.href;
+        }
+      } catch {
+        return '#';
+      }
+      return '#';
+    }
+
+    function fallbackSanitizeToFragment(html) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const allowedTags = new Set(ALLOWED_MD_ELEMENTS.map((t) => t.toUpperCase()));
+      const allowedAttrs = new Set(ALLOWED_MD_ATTRS);
+
+      function cleanNode(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          return document.createTextNode(node.textContent || '');
+        }
+        if (node.nodeType !== Node.ELEMENT_NODE) {
+          return null;
+        }
+        const tag = node.tagName.toUpperCase();
+        if (!allowedTags.has(tag)) {
+          return null;
+        }
+        const cleanEl = document.createElement(tag.toLowerCase());
+
+        for (const attr of node.attributes) {
+          if (allowedAttrs.has(attr.name)) {
+            if (attr.name === 'href') {
+              cleanEl.setAttribute('href', sanitizeUrl(attr.value));
+            } else {
+              cleanEl.setAttribute(attr.name, attr.value);
+            }
+          }
+        }
+        for (const child of node.childNodes) {
+          const cleanedChild = cleanNode(child);
+          if (cleanedChild) cleanEl.appendChild(cleanedChild);
+        }
+        return cleanEl;
+      }
+
+      const frag = document.createDocumentFragment();
+      for (const child of doc.body.childNodes) {
+        const cleaned = cleanNode(child);
+        if (cleaned) frag.appendChild(cleaned);
+      }
+      return frag;
+    }
+
+    function safeSetHTML(el, html) {
+      if ('setHTML' in Element.prototype) {
+        try {
+          el.setHTML(html, {
+            sanitizer: {
+              elements: ALLOWED_MD_ELEMENTS,
+              attributes: ALLOWED_MD_ATTRS
+            }
+          });
+          return;
+        } catch {
+          // Fall back if SVG/custom config differs across early implementations
+        }
+      }
+      el.replaceChildren(fallbackSanitizeToFragment(html));
+    }
+
+    function renderMarkdown(markdownText) {
+      const codeBlocks = [];
+      // Extract fenced code blocks (including unclosed trailing block during streaming)
+      let source = markdownText.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)(?:```|$)/g, (_, lang, code) => {
+        const id = codeBlocks.length;
+        codeBlocks.push({
+          lang: (lang || 'code').trim() || 'code',
+          code: code.replace(/\n$/, '')
+        });
+        return `\n@@CODEBLOCK_${id}@@\n`;
+      });
+
+      const lines = source.split('\n');
+      const out = [];
+      let inUl = false;
+      let inOl = false;
+
+      const closeLists = () => {
+        if (inUl) { out.push('</ul>'); inUl = false; }
+        if (inOl) { out.push('</ol>'); inOl = false; }
+      };
+
+      const formatInline = (text) => {
+        let s = escapeHtml(text);
+        s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+        s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        s = s.replace(/(^|[^*])\*([^*]+)\*(?!\*)/g, '$1<em>$2</em>');
+        s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, href) => {
+          return `<a href="${escapeHtml(sanitizeUrl(href))}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+        });
+        return s;
+      };
+
+      for (let i = 0; i < lines.length; i++) {
+        const rawLine = lines[i];
+        const trimmed = rawLine.trim();
+
+        const cbMatch = trimmed.match(/^@@CODEBLOCK_(\d+)@@$/);
+        if (cbMatch) {
+          closeLists();
+          const block = codeBlocks[Number(cbMatch[1])];
+          out.push(
+            `<div class="code-block">` +
+              `<div class="code-block-header">` +
+                `<span class="code-lang">${escapeHtml(block.lang)}</span>` +
+                `<button type="button" class="copy-code-btn" aria-label="Copy ${escapeHtml(block.lang)} code">Copy</button>` +
+              `</div>` +
+              `<pre><code>${escapeHtml(block.code)}</code></pre>` +
+            `</div>`
+          );
+          continue;
+        }
+
+        if (!trimmed) {
+          closeLists();
+          continue;
+        }
+
+        if (/^(-{3,}|\*{3,})$/.test(trimmed)) {
+          closeLists();
+          out.push('<hr>');
+          continue;
+        }
+
+        // Markdown table (| header | ... | followed by | --- | ... |)
+        if (trimmed.startsWith('|') && i + 1 < lines.length && /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)+\|?\s*$/.test(lines[i + 1])) {
+          closeLists();
+          const parseCells = (line) => line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim());
+          const headers = parseCells(trimmed);
+          i += 2;
+          const rows = [];
+          while (i < lines.length && lines[i].trim().startsWith('|')) {
+            rows.push(parseCells(lines[i]));
+            i++;
+          }
+          i--;
+          let tableHtml = '<div class="md-table-wrap"><table><thead><tr>';
+          for (const h of headers) tableHtml += `<th scope="col">${formatInline(h)}</th>`;
+          tableHtml += '</tr></thead><tbody>';
+          for (const row of rows) {
+            tableHtml += '<tr>';
+            for (let c = 0; c < headers.length; c++) {
+              tableHtml += `<td>${formatInline(row[c] ?? '')}</td>`;
+            }
+            tableHtml += '</tr>';
+          }
+          tableHtml += '</tbody></table></div>';
+          out.push(tableHtml);
+          continue;
+        }
+
+        if (trimmed.startsWith('### ')) {
+          closeLists();
+          out.push(`<h4>${formatInline(trimmed.slice(4))}</h4>`);
+          continue;
+        }
+        if (trimmed.startsWith('## ')) {
+          closeLists();
+          out.push(`<h3>${formatInline(trimmed.slice(3))}</h3>`);
+          continue;
+        }
+        if (trimmed.startsWith('# ')) {
+          closeLists();
+          out.push(`<h2>${formatInline(trimmed.slice(2))}</h2>`);
+          continue;
+        }
+        if (trimmed.startsWith('> ')) {
+          closeLists();
+          out.push(`<blockquote><p>${formatInline(trimmed.slice(2))}</p></blockquote>`);
+          continue;
+        }
+
+        const ulMatch = trimmed.match(/^[-*]\s+(.+)$/);
+        if (ulMatch) {
+          if (inOl) { out.push('</ol>'); inOl = false; }
+          if (!inUl) { out.push('<ul>'); inUl = true; }
+          out.push(`<li>${formatInline(ulMatch[1])}</li>`);
+          continue;
+        }
+
+        const olMatch = trimmed.match(/^\d+\.\s+(.+)$/);
+        if (olMatch) {
+          if (inUl) { out.push('</ul>'); inUl = false; }
+          if (!inOl) { out.push('<ol>'); inOl = true; }
+          out.push(`<li>${formatInline(olMatch[1])}</li>`);
+          continue;
+        }
+
+        closeLists();
+        out.push(`<p>${formatInline(trimmed)}</p>`);
+      }
+
+      closeLists();
+      return { html: out.join(''), codeBlocks };
+    }
+
+    // --------------------------------------------------------------------------
+    // 4. AI Providers (Gemini Streaming SSE, Custom Endpoint, Smart Demo)
+    // --------------------------------------------------------------------------
+    function buildDemoResponse(prompt, mode, history = []) {
+      const q = prompt.trim();
+      const lower = q.toLowerCase();
+
+      // 1. Conversational greetings & identity
+      if (/^(hi+|hello+|hey+|yo|good\s+(morning|afternoon|evening)|howdy)\b[!?.]*$/i.test(lower)) {
+        return `Hey! How can I help you today?\n\nWhether you want to **brainstorm ideas**, **write or debug code**, **draft something crisp**, or **break down a complex topic**, just drop it in and we'll dive right in.`;
+      }
+
+      if (/how are you|how's it going|what's up/i.test(lower)) {
+        return `Doing great and ready to help! What are you working on today?`;
+      }
+
+      if (/who are you|what are you|what can you do|help me$/i.test(lower)) {
+        return `I'm **NEXA**, your AI assistant for writing, coding, brainstorming, and deep problem-solving.\n\nHere are a few things we can do together right now:\n- **Think & Plan:** Break down tricky topics, compare trade-offs, or map out a project.\n- **Code & Debug:** Write clean functions, fix bugs, or design APIs (switch to **Code** mode anytime).\n- **Write & Polish:** Draft emails, pitches, essays, or social posts in your preferred tone.\n\nWhat would you like to tackle first?`;
+      }
+
+      if (/^(thanks|thank you|thx|awesome|cool|nice)[!.]*$/i.test(lower)) {
+        return `You're welcome! Let me know if you want to refine anything or explore the next step.`;
+      }
+
+      // 2. Follow-up awareness in multi-turn conversations
+      const prevAssistant = [...history].reverse().find((m) => m.role === 'assistant' && m.content);
+      if (prevAssistant && /^(make it shorter|shorter|summarize|tldr|tl;dr|simpler|eli5)$/i.test(lower)) {
+        const firstPara = prevAssistant.content.split('\n\n').find((p) => p && !p.startsWith('#')) || prevAssistant.content;
+        return `Here's the **short version**:\n\n> ${firstPara.replace(/\n+/g, ' ').slice(0, 240)}\n\nWant me to condense it into a single sentence or bullet list?`;
+      }
+
+      // 3. Specific rich starter / common topics
+      if (lower.includes('scalable api') || lower.includes('architect')) {
+        if (mode === 'concise') {
+          return `To build a scalable API, keep your request path stateless and offload heavy work asynchronously.\n\n- **Gateway:** TLS, auth, and sliding-window rate limiting.\n- **Compute:** Stateless handlers with \`Idempotency-Key\` support.\n- **Data:** PostgreSQL + connection pooler (**PgBouncer**) + **Redis** cache.\n- **Queues:** Push slow jobs (emails, webhooks, AI calls) to **BullMQ / SQS**.\n\n\`\`\`ts\nexport const rateLimit = { windowMs: 60_000, max: 120, strategy: 'sliding-window' };\n\`\`\`\n\nWant me to sketch the database schema or folder structure next?`;
+        }
+        return `To scale an API cleanly from an early MVP to high throughput, the biggest win is separating **fast request handling**, **stateful data**, and **background work**.\n\n### Core Architecture Layers\n\n1. **Edge & API Gateway:** Validate JWTs, enforce per-user/per-tenant rate limits, and normalize errors before requests ever hit your app workers.\n2. **Stateless App Tier:** Never store session state in local memory. Use an \`Idempotency-Key\` header on \`POST\` endpoints so network retries never create duplicate records.\n3. **Data & Caching:** Put **PgBouncer** in front of PostgreSQL, cache hot reads in **Redis**, and add read replicas once read traffic dominates.\n4. **Async Job Queue:** Move anything slow (emails, PDFs, webhooks) off the HTTP thread into a durable queue.\n\n\`\`\`typescript\n// Idempotent request middleware pattern\nexport async function withIdempotency(key: string, ttlSec: number, run: () => Promise<Response>) {\n  const cached = await redis.get(\`idem:\${key}\`);\n  if (cached) return new Response(cached, { status: 200, headers: { 'x-cache': 'HIT' } });\n\n  const response = await run();\n  const body = await response.clone().text();\n  await redis.set(\`idem:\${key}\`, body, { EX: ttlSec });\n  return response;\n}\n\`\`\`\n\nIf you share your expected traffic, stack (Node, Python, Go), or database, I can tailor a concrete blueprint for you.`;
+      }
+
+      if (lower.includes('quantum') || lower.includes('entanglement')) {
+        if (mode === 'creative') {
+          return `Imagine striking a single crystal bell so purely that its sound splits into **two paired photons** drifting miles apart. Until someone measures one, neither has picked a direction—they share a single, unbroken mathematical state.\n\n- **Instant correlation, not instant texting:** Checking Photon A tells you Photon B's state immediately, yet A's outcome is genuinely random, so you can't smuggle a message faster than light.\n- **One shared system:** Entanglement isn't an invisible wire—it's **two particles acting like two halves of one coin**.\n\nWant me to walk through a concrete real-world application like quantum key distribution?`;
+        }
+        return `**Quantum entanglement** happens when two (or more) particles become linked so that you can no longer describe one particle's quantum state without the other—even if they are light-years apart.\n\n### How It Works in Plain English\n\n- **Before you measure:** Both particles exist in a shared superposition. You don't know whether particle A is "up" or "down," only that A and B are tied together.\n- **The moment you measure:** Observing particle A immediately locks in particle B's correlated state.\n- **Why it doesn't break physics:** Because A's measurement result is completely random, **no controllable signal travels faster than light**—you only see the correlation when both observers compare results later.\n\n\`\`\`text\nBell State |Φ+⟩ = (|00⟩ + |11⟩) / √2\n  Measure qubit 1 -> 0  ⇒  qubit 2 is guaranteed 0\n  Measure qubit 1 -> 1  ⇒  qubit 2 is guaranteed 1\n\`\`\`\n\nWould you like to go deeper into Bell's theorem or how quantum computers use entanglement?`;
+      }
+
+      if (lower.includes('hackathon') || lower.includes('pitch')) {
+        return `Here is a tight, punchy **60-second hackathon pitch** you can deliver straight from the stage:\n\n### Pitch Script\n\n> *"Every day, builders lose their best focus jumping between docs, terminals, and cluttered chat windows. Meet **NEXA**—an ambient AI workspace that adapts to how you actually work. Whether you're in Deep Work, writing Code, or drafting something Creative, NEXA shifts its mode, keeps your threads local and instant, and gets out of your way so you stay in flow."*\n\n### 3 Slides That Pair With It\n\n1. **The Problem:** Static tools break focus with constant context switching.\n2. **Live Demo (30 sec):** Show a prompt morphing into structured code with one-click copy and mode switching.\n3. **What's Next:** Team workspaces, plugin hooks, and custom model routing.\n\nTell me your project's name and problem statement if you want me to customize this for your exact hackathon!`;
+      }
+
+      // 4. Comparisons ("X vs Y", "compare X and Y")
+      const vsMatch = q.match(/(.+?)\s+(?:vs\.?|versus)\s+(.+)/i);
+      if (vsMatch || /\b(compare|difference between)\b/i.test(lower)) {
+        const itemA = vsMatch ? vsMatch[1].replace(/^(compare|difference between)\s+/i, '').trim() : 'Option A';
+        const itemB = vsMatch ? vsMatch[2].replace(/[?.!]+$/, '').trim() : 'Option B';
+        return `Here is a quick side-by-side breakdown of **${itemA}** vs **${itemB}**:\n\n| Dimension | ${itemA} | ${itemB} |\n| --- | --- | --- |\n| **Strengths** | Predictable structure & maturity | Flexibility & rapid iteration |\n| **Best Fit** | High-consistency, well-defined workflows | Evolving requirements & fast prototyping |\n| **Watch Out For** | Extra upfront setup | Discipline needed as scale grows |\n\n### Bottom Line\n- Choose **${itemA}** if reliability, clear constraints, and long-term maintainability matter most.\n- Choose **${itemB}** if speed of iteration and adaptability are your top priority.\n\nShare what you're building and I can recommend the better pick for your specific case!`;
+      }
+
+      // 5. Writing / Drafting requests
+      if (/\b(write|draft|email|letter|cover letter|essay|post|message|bio|summary)\b/i.test(lower) && !/\b(code|script|function|python|js|sql)\b/i.test(lower)) {
+        return `Here's a clean, ready-to-use draft you can adapt right away:\n\n---\n\n**Subject:** Quick follow-up & next steps\n\nHi [Name],\n\nThanks for taking the time earlier—I wanted to share a brief update regarding **${q.replace(/^(write|draft)\s+(an?\s+)?/i, '')}**.\n\nHere are the key points:\n- **Goal:** Keep things clear, actionable, and aligned on timeline.\n- **Next step:** Let me know if Thursday works for a quick 15-minute sync, or feel free to reply with feedback.\n\nBest,\n[Your Name]\n\n---\n\nWant me to adjust the tone (more formal, warmer, or shorter) or tailor it with specific details?`;
+      }
+
+      // 6. Coding / Debugging / Pipelines
+      if (mode === 'code' || /\b(async|pipeline|code|function|script|debug|error|bug|react|python|javascript|typescript|sql|api|algorithm|sort)\b/i.test(lower)) {
+        if (/\bpython\b/i.test(lower)) {
+          return `Here's a clean, idiomatic Python approach for **${q}**:\n\n\`\`\`python\nfrom pathlib import Path\n\ndef process_items(items: list[str]) -> list[str]:\n    \"\"\"Normalize, deduplicate, and preserve order.\"\"\"\n    seen: set[str] = set()\n    cleaned: list[str] = []\n    for item in items:\n        norm = item.strip()\n        if norm and norm not in seen:\n            seen.add(norm)\n            cleaned.append(norm)\n    return cleaned\n\`\`\`\n\n- **Readable & type-safe:** Uses standard library types with zero external dependencies.\n- **Order-preserving:** Deduplicates cleanly via a \`set\` lookup in O(n) time.\n\nPaste your exact snippet or error message if you'd like me to tailor or debug it directly!`;
+        }
+        return `Here is a clean, production-safe pattern you can drop straight into your codebase:\n\n\`\`\`javascript\nasync function runPool(items, concurrency, worker, signal) {\n  const results = new Array(items.length);\n  let cursor = 0;\n\n  async function next() {\n    while (cursor < items.length) {\n      if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');\n      const idx = cursor++;\n      results[idx] = await worker(items[idx], idx, signal);\n    }\n  }\n\n  const workers = Array.from({ length: Math.min(concurrency, items.length) }, next);\n  await Promise.all(workers);\n  return results;\n}\n\`\`\`\n\n### Why This Works Well\n- **Controlled concurrency:** Prevents spiking memory or rate limits compared to an unbounded \`Promise.all()\`.\n- **Clean cancellation:** Passing an \`AbortSignal\` stops queued tasks immediately.\n\nIf you share the exact language, framework, or error you're hitting, I'll give you a targeted fix.`;
+      }
+
+      // 7. Planning / Ideas / How-to
+      if (/\b(plan|roadmap|ideas|tips|steps|how to|checklist|learn|study|strategy)\b/i.test(lower)) {
+        return `Here is a practical, step-by-step way to approach **${q}**:\n\n1. **Define the exact outcome:** Pick one clear milestone you want to reach first so scope doesn't sprawl.\n2. **Build the core loop early:** Focus on the 20% of effort that proves the idea works end-to-end.\n3. **Test against real feedback:** Spot friction points early instead of polishing details too soon.\n4. **Iterate in tight cycles:** Improve one bottleneck at a time based on what actually matters.\n\nWould you like me to turn this into a day-by-day schedule or dive deeper into step 1?`;
+      }
+
+      // 8. General ChatGPT-style answer tailored to mode
+      if (mode === 'concise') {
+        return `Here's the clearest way to look at **${q}**:\n\n- **Core takeaway:** Focus on the primary goal first, separate the essential constraints from nice-to-haves, and validate with a small concrete test.\n- **Next step:** Share any constraints or context you're working with and I'll give you a specific recommendation.\n\n*(Tip: Add your Gemini key in **API Setup** anytime for live AI answers across any topic.)*`;
+      }
+
+      if (mode === 'creative') {
+        return `That's a great angle to explore—**${q}** opens up a lot of interesting possibilities.\n\nThink of it in three fresh layers:\n- **The obvious take:** What most people expect first—useful as a baseline, rarely memorable on its own.\n- **The twist:** Flip one assumption (audience, format, or constraint) to unlock something distinct.\n- **The hook:** Anchor it around one vivid, concrete image or story.\n\nWant to brainstorm 3–5 specific directions together? *(You can also connect a Gemini key in **API Setup** for live open-ended generation.)*`;
+      }
+
+      return `Great question—let's break down **${q}** clearly.\n\n### Key Points\n\n1. **Start with the core goal:** Clarify what success looks like before choosing tools or details.\n2. **Break it into manageable parts:** Separate what is fixed (constraints) from what you can experiment with.\n3. **Use concrete examples:** Testing one real scenario quickly exposes hidden edge cases.\n\nIf you tell me a bit more about your context or goal, I can give you a much more specific answer. *(Note: **Demo Mode** is active—add your Gemini API key in **API Setup** for live responses on any topic.)*`;
+    }
+
+    async function streamAIResponse({ thread, mode, onToken, signal }) {
+      const { apiKey, model, endpoint } = state.settings;
+      const systemPrompt = FOCUS_MODES[mode].systemPrompt;
+      const historyMessages = thread.messages
+        .filter((m) => !m.isError && (m.role === 'user' || (m.role === 'assistant' && m.content)))
+        .map((m) => ({ role: m.role, content: m.content }));
+
+      // 1. Custom Backend Endpoint
+      if (endpoint && endpoint.trim()) {
+        const headers = { 'Content-Type': 'application/json' };
+        if (apiKey && apiKey.trim()) {
+          headers['Authorization'] = `Bearer ${apiKey.trim()}`;
+        }
+        const res = await fetch(endpoint.trim(), {
+          method: 'POST',
+          headers,
+          signal,
+          body: JSON.stringify({
+            model: model || DEFAULT_GEMINI_MODEL,
+            stream: true,
+            messages: [{ role: 'system', content: systemPrompt }, ...historyMessages]
+          })
+        });
+
+        if (!res.ok) {
+          throw new Error(`Endpoint error (${res.status}): ${await res.text()}`);
+        }
+
+        const ctype = res.headers.get('content-type') || '';
+        if (ctype.includes('text/event-stream') && res.body) {
+          await readSSEStream(res.body, (dataStr) => {
+            if (dataStr === '[DONE]') return;
+            try {
+              const json = JSON.parse(dataStr);
+              const delta = json.choices?.[0]?.delta?.content
+                ?? json.delta
+                ?? json.text
+                ?? json.candidates?.[0]?.content?.parts?.[0]?.text
+                ?? '';
+              if (delta) onToken(delta);
+            } catch {
+              if (dataStr) onToken(dataStr);
+            }
+          });
+          return;
+        }
+
+        const data = await res.json();
+        const fullText = data.choices?.[0]?.message?.content
+          ?? data.content
+          ?? data.text
+          ?? JSON.stringify(data, null, 2);
+        await simulateTokenStream(fullText, onToken, signal);
+        return;
+      }
+
+      // 2. Direct Gemini API SSE Streaming
+      if (apiKey && apiKey.trim()) {
+        const contents = historyMessages.map((m) => ({
+          role: m.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: m.content }]
+        }));
+
+        const callGemini = async (targetModel) => {
+          const chosenModel = encodeURIComponent(targetModel || DEFAULT_GEMINI_MODEL);
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${chosenModel}:streamGenerateContent?alt=sse&key=${encodeURIComponent(apiKey.trim())}`;
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal,
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: systemPrompt }] },
+              contents,
+              generationConfig: {
+                temperature: FOCUS_MODES[mode].temperature
+              }
+            })
+          });
+          if (!res.ok) {
+            let errMsg = `Gemini API error (${res.status})`;
+            try {
+              const errJson = await res.json();
+              if (errJson.error?.message) errMsg = errJson.error.message;
+            } catch { /* ignore */ }
+            const err = new Error(errMsg);
+            err.status = res.status;
+            throw err;
+          }
+          return res;
+        };
+
+        const isTransientCapacityError = (err) => (
+          err.status === 503
+          || err.status === 429
+          || /high demand|temporarily unavailable|overloaded|try again later|rate limit/i.test(err.message)
+        );
+
+        const callGeminiWithBackoff = async (targetModel) => {
+          const delays = [900, 2100];
+          for (let attempt = 0; attempt <= delays.length; attempt++) {
+            try {
+              return await callGemini(targetModel);
+            } catch (err) {
+              if (err.name === 'AbortError') throw err;
+              if (isTransientCapacityError(err) && attempt < delays.length) {
+                showToast(`High demand on ${targetModel} — retrying…`);
+                await delay(delays[attempt], signal);
+                continue;
+              }
+              throw err;
+            }
+          }
+        };
+
+        const primaryModel = model || DEFAULT_GEMINI_MODEL;
+        let res;
+        try {
+          res = await callGeminiWithBackoff(primaryModel);
+        } catch (err) {
+          if (err.name === 'AbortError') throw err;
+
+          const recMatch = err.message.match(/no longer available[\s\S]*?models\/([a-zA-Z0-9._-]+)/i);
+          if (recMatch && recMatch[1] && recMatch[1] !== primaryModel) {
+            const replacement = recMatch[1];
+            state.settings.model = replacement;
+            state.settings.modelMigrated = true;
+            try {
+              localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(state.settings));
+            } catch {}
+            showToast(`Updated Gemini model to ${replacement}`);
+            res = await callGeminiWithBackoff(replacement);
+          } else if (isTransientCapacityError(err)) {
+            const fallbacks = ['gemini-3.6-flash', 'gemini-3.5-flash-lite'].filter((m) => m !== primaryModel);
+            let recovered = null;
+            for (const fb of fallbacks) {
+              try {
+                showToast(`${primaryModel} busy — trying ${fb}…`);
+                recovered = await callGemini(fb);
+                showToast(`Routed to ${fb}`);
+                break;
+              } catch (fbErr) {
+                if (fbErr.name === 'AbortError') throw fbErr;
+              }
+            }
+            if (!recovered) throw err;
+            res = recovered;
+          } else {
+            throw err;
+          }
+        }
+
+        await readSSEStream(res.body, (dataStr) => {
+          if (dataStr === '[DONE]') return;
+          try {
+            const json = JSON.parse(dataStr);
+            const parts = json.candidates?.[0]?.content?.parts || [];
+            for (const part of parts) {
+              if (part.text) onToken(part.text);
+            }
+          } catch {
+            // Skip malformed keep-alive chunk
+          }
+        });
+        return;
+      }
+
+      // 3. Built-in Smart Demo Streaming Responder
+      const lastUser = [...historyMessages].reverse().find((m) => m.role === 'user');
+      const demoText = buildDemoResponse(lastUser ? lastUser.content : 'Hello', mode, historyMessages);
+      await simulateTokenStream(demoText, onToken, signal);
+    }
+
+    async function readSSEStream(readableStream, onData) {
+      const reader = readableStream.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split(/\r?\n\r?\n/);
+        buffer = events.pop() || '';
+        for (const evt of events) {
+          const dataLines = evt
+            .split(/\r?\n/)
+            .filter((l) => l.startsWith('data:'))
+            .map((l) => l.slice(5).trim());
+          if (dataLines.length) {
+            onData(dataLines.join('\n'));
+          }
+        }
+      }
+      if (buffer.trim().startsWith('data:')) {
+        onData(buffer.trim().slice(5).trim());
+      }
+    }
+
+    async function simulateTokenStream(text, onToken, signal) {
+      // Brief thinking pause
+      await delay(360, signal);
+      const tokens = text.match(/\S+\s*|\n+/g) || [text];
+      for (const token of tokens) {
+        if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+        onToken(token);
+        await delay(16 + Math.random() * 20, signal);
+      }
+    }
+
+    function delay(ms, signal) {
+      return new Promise((resolve, reject) => {
+        if (signal?.aborted) {
+          reject(new DOMException('Aborted', 'AbortError'));
+          return;
+        }
+        const timer = setTimeout(resolve, ms);
+        signal?.addEventListener('abort', () => {
+          clearTimeout(timer);
+          reject(new DOMException('Aborted', 'AbortError'));
+        }, { once: true });
+      });
+    }
+
+    // --------------------------------------------------------------------------
+    // 5. DOM Elements & UI Helpers
+    // --------------------------------------------------------------------------
+    const el = {
+      appShell: document.getElementById('app-shell'),
+      fluidCanvas: document.getElementById('fluid-canvas'),
+      heroTitle: document.getElementById('hero-title'),
+      heroSubtitle: document.getElementById('hero-subtitle'),
+      heroIntro: document.getElementById('hero-intro'),
+      brandHomeBtn: document.getElementById('brand-home-btn'),
+      primaryCtaBtn: document.getElementById('primary-cta-btn'),
+      openSettingsIcon: document.getElementById('open-settings-icon'),
+      historyOpenBtn: document.getElementById('history-open-btn'),
+      chatScrollWrap: document.getElementById('chat-scroll-wrap'),
+      chatScroll: document.getElementById('chat-scroll'),
+      chatThread: document.getElementById('chat-thread'),
+      promptForm: document.getElementById('prompt-form'),
+      growableWrap: document.getElementById('growable-wrap'),
+      promptInput: document.getElementById('prompt-input'),
+      askBtn: document.getElementById('ask-btn'),
+      starterChips: document.getElementById('starter-chips'),
+      inkMotionBtn: document.getElementById('ink-motion-btn'),
+      liveAnnouncer: document.getElementById('live-announcer'),
+      toast: document.getElementById('toast'),
+      // Settings dialog
+      settingsDialog: document.getElementById('settings-dialog'),
+      settingsForm: document.getElementById('settings-form'),
+      settingsCloseBtn: document.getElementById('settings-close-btn'),
+      geminiKeyInput: document.getElementById('gemini-key-input'),
+      toggleKeyVis: document.getElementById('toggle-key-vis'),
+      geminiModelSelect: document.getElementById('gemini-model-select'),
+      geminiCustomModelInput: document.getElementById('gemini-custom-model-input'),
+      customEndpointInput: document.getElementById('custom-endpoint-input'),
+      clearSettingsBtn: document.getElementById('clear-settings-btn'),
+      connectionStatusText: document.getElementById('connection-status-text'),
+      // History drawer
+      historyDrawer: document.getElementById('history-drawer'),
+      drawerScroller: document.getElementById('drawer-scroller'),
+      drawerSheet: document.getElementById('drawer-sheet'),
+      historyCloseBtn: document.getElementById('history-close-btn'),
+      drawerNewChatBtn: document.getElementById('drawer-new-chat-btn'),
+      historyList: document.getElementById('history-list'),
+      historyCountLabel: document.getElementById('history-count-label'),
+      clearAllHistoryBtn: document.getElementById('clear-all-history-btn')
+    };
+
+    const fluidSim = new FluidInkSimulation(el.fluidCanvas);
+    let lenisInstance = null;
+    let toastTimer = null;
+
+    function showToast(message) {
+      el.toast.textContent = message;
+      el.toast.classList.add('is-visible');
+      el.liveAnnouncer.textContent = message;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        el.toast.classList.remove('is-visible');
+      }, 2200);
+    }
+
+    // --------------------------------------------------------------------------
+    // 6. Word-by-Word Hero Reveal & Entrance Stagger
+    // --------------------------------------------------------------------------
+    function splitWordsForReveal(element, baseDelayMs, staggerMs) {
+      const text = element.textContent.trim().replace(/\s+/g, ' ');
+      const words = text.split(' ');
+      const frag = document.createDocumentFragment();
+      words.forEach((word, index) => {
+        const clip = document.createElement('span');
+        clip.className = 'word-clip';
+        const token = document.createElement('span');
+        token.className = 'word-token';
+        token.textContent = word;
+        token.style.setProperty('--word-delay', `${baseDelayMs + index * staggerMs}ms`);
+        clip.appendChild(token);
+        frag.appendChild(clip);
+        if (index < words.length - 1) {
+          frag.appendChild(document.createTextNode(' '));
+        }
+      });
+      element.replaceChildren(frag);
+    }
+
+    splitWordsForReveal(el.heroTitle, 480, 85);
+    splitWordsForReveal(el.heroSubtitle, 1150, 22);
+
+    // --------------------------------------------------------------------------
+    // 7. Focus Mode Management
+    // --------------------------------------------------------------------------
+    function applyFocusMode(modeKey, triggerBurst = false) {
+      if (!FOCUS_MODES[modeKey]) return;
+      state.mode = modeKey;
+      localStorage.setItem(STORAGE_KEYS.mode, modeKey);
+
+      const mode = FOCUS_MODES[modeKey];
+      document.documentElement.style.setProperty('--accent', mode.accent);
+      document.documentElement.style.setProperty('--accent-soft', mode.accentSoft);
+      document.documentElement.style.setProperty('--accent-glow', mode.accentGlow);
+
+      document.querySelectorAll('.mode-btn').forEach((btn) => {
+        btn.setAttribute('aria-pressed', String(btn.dataset.mode === modeKey));
+      });
+
+      fluidSim.setPalette(modeKey);
+      if (triggerBurst) {
+        fluidSim.triggerConversationPulse('mode');
+        showToast(`${mode.label} focus active`);
+      }
+    }
+
+    document.querySelectorAll('.mode-btn').forEach((btn) => {
+      btn.addEventListener('click', () => applyFocusMode(btn.dataset.mode, true));
+    });
+
+    // --------------------------------------------------------------------------
+    // 8. Lenis 1.3.x Smooth Scrolling for Chat Thread
+    // --------------------------------------------------------------------------
+    async function initLenis() {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      try {
+        const mod = await import('https://cdn.jsdelivr.net/npm/lenis@1.3.28/+esm');
+        const Lenis = mod.default || mod.Lenis;
+        if (!Lenis) return;
+        lenisInstance = new Lenis({
+          wrapper: el.chatScroll,
+          content: el.chatThread,
+          lerp: 0.14,
+          smoothWheel: true
+        });
+        function raf(time) {
+          lenisInstance.raf(time);
+          requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+      } catch {
+        // Offline or blocked CDN: native smooth/auto scroll handles cleanly with zero uncaught errors
+      }
+    }
+
+    function scrollToBottom(immediate = false) {
+      if (state.userScrolledUp && !immediate) return;
+      const target = el.chatScroll.scrollHeight - el.chatScroll.clientHeight;
+      if (target <= 0) return;
+      if (lenisInstance && !immediate) {
+        lenisInstance.scrollTo(target, { immediate: false });
+      } else {
+        el.chatScroll.scrollTop = el.chatScroll.scrollHeight;
+      }
+    }
+
+    el.chatScroll.addEventListener('scroll', () => {
+      const distFromBottom = el.chatScroll.scrollHeight - el.chatScroll.scrollTop - el.chatScroll.clientHeight;
+      state.userScrolledUp = distFromBottom > 64;
+    }, { passive: true });
+
+    // --------------------------------------------------------------------------
+    // 9. Thread State, Rendering & Chat Interactions
+    // --------------------------------------------------------------------------
+    function getActiveThread() {
+      return state.threads.find((t) => t.id === state.activeThreadId) || null;
+    }
+
+    function syncViewChrome() {
+      const thread = getActiveThread();
+      const hasMessages = Boolean(thread && thread.messages.length > 0);
+      el.appShell.dataset.view = hasMessages ? 'chat' : 'hero';
+      el.heroIntro.inert = hasMessages;
+      el.heroIntro.setAttribute('aria-hidden', String(hasMessages));
+      el.primaryCtaBtn.textContent = hasMessages ? 'New Chat' : 'API Setup';
+      document.title = hasMessages && thread.title
+        ? `${thread.title} | NEXA`
+        : 'NEXA — Clarity in Every Conversation';
+    }
+
+    function createLumenGlyphSvg(className) {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 28 28');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('aria-hidden', 'true');
+      svg.setAttribute('class', className);
+      const p1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      p1.setAttribute('d', 'M3 11.5C6.2 7 9.8 7 14 11.5C18.2 16 21.8 16 25 11.5');
+      p1.setAttribute('stroke', 'currentColor');
+      p1.setAttribute('stroke-width', '2');
+      p1.setAttribute('stroke-linecap', 'round');
+      const p2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      p2.setAttribute('d', 'M3 16.5C6.2 21 9.8 21 14 16.5C18.2 12 21.8 12 25 16.5');
+      p2.setAttribute('stroke', 'currentColor');
+      p2.setAttribute('stroke-width', '2');
+      p2.setAttribute('stroke-linecap', 'round');
+      p2.setAttribute('opacity', '0.7');
+      svg.append(p1, p2);
+      return svg;
+    }
+
+    function renderMessageRow(msg, isLastAssistant, isFresh = false) {
+      const row = document.createElement('article');
+      row.className = `msg-row is-${msg.role}${isFresh ? ' is-fresh' : ''}`;
+      row.dataset.msgId = msg.id;
+
+      if (msg.role === 'user') {
+        const bubble = document.createElement('div');
+        bubble.className = 'msg-bubble-user';
+        bubble.textContent = msg.content;
+        row.appendChild(bubble);
+        return row;
+      }
+
+      const card = document.createElement('div');
+      card.className = 'msg-card-ai';
+
+      const head = document.createElement('div');
+      head.className = 'msg-ai-head';
+
+      const identity = document.createElement('div');
+      identity.className = 'msg-ai-identity';
+      identity.appendChild(createLumenGlyphSvg('msg-ai-glyph'));
+      const label = document.createElement('span');
+      label.textContent = 'NEXA';
+      identity.appendChild(label);
+      if (msg.mode && FOCUS_MODES[msg.mode]) {
+        const tag = document.createElement('span');
+        tag.className = 'msg-mode-tag';
+        tag.textContent = FOCUS_MODES[msg.mode].label;
+        identity.appendChild(tag);
+      }
+      head.appendChild(identity);
+
+      const actions = document.createElement('div');
+      actions.className = 'msg-actions';
+
+      const copyBtn = document.createElement('button');
+      copyBtn.type = 'button';
+      copyBtn.className = 'msg-action-btn';
+      copyBtn.dataset.action = 'copy-msg';
+      copyBtn.textContent = 'Copy';
+      copyBtn.setAttribute('aria-label', 'Copy response');
+      actions.appendChild(copyBtn);
+
+      if (isLastAssistant && !state.isStreaming) {
+        const regenBtn = document.createElement('button');
+        regenBtn.type = 'button';
+        regenBtn.className = 'msg-action-btn';
+        regenBtn.dataset.action = 'regen-msg';
+        regenBtn.textContent = 'Regenerate';
+        regenBtn.setAttribute('aria-label', 'Regenerate response');
+        actions.appendChild(regenBtn);
+      }
+
+      head.appendChild(actions);
+      card.appendChild(head);
+
+      const body = document.createElement('div');
+      body.className = 'md-body';
+
+      if (msg.status === 'thinking') {
+        const dots = document.createElement('div');
+        dots.className = 'thinking-dots';
+        dots.setAttribute('aria-label', 'Thinking');
+        dots.innerHTML = '<span></span><span></span><span></span>';
+        body.appendChild(dots);
+      } else {
+        const rendered = renderMarkdown(msg.content || '');
+        safeSetHTML(body, rendered.html);
+        body.querySelectorAll('.copy-code-btn').forEach((btn, idx) => {
+          btn.dataset.codeIdx = String(idx);
+        });
+        card._codeBlocks = rendered.codeBlocks;
+        if (msg.status === 'streaming') {
+          const cursor = document.createElement('span');
+          cursor.className = 'stream-cursor';
+          cursor.setAttribute('aria-hidden', 'true');
+          const lastEl = body.lastElementChild;
+          if (lastEl && lastEl.tagName === 'P') {
+            lastEl.appendChild(cursor);
+          } else {
+            body.appendChild(cursor);
+          }
+        }
+      }
+
+      card.appendChild(body);
+      row.appendChild(card);
+      return row;
+    }
+
+    function renderThread() {
+      const thread = getActiveThread();
+      el.chatThread.replaceChildren();
+      if (!thread || thread.messages.length === 0) {
+        syncViewChrome();
+        return;
+      }
+
+      const lastAiIdx = thread.messages.map((m) => m.role).lastIndexOf('assistant');
+      thread.messages.forEach((msg, idx) => {
+        el.chatThread.appendChild(renderMessageRow(msg, idx === lastAiIdx, false));
+      });
+      syncViewChrome();
+      requestAnimationFrame(() => scrollToBottom(true));
+    }
+
+    function updateMessageDOM(msg, isLastAssistant) {
+      const existing = el.chatThread.querySelector(`[data-msg-id="${CSS.escape(msg.id)}"]`);
+      const next = renderMessageRow(msg, isLastAssistant, !existing);
+      if (existing) {
+        existing.replaceWith(next);
+      } else {
+        el.chatThread.appendChild(next);
+      }
+    }
+
+    function startNewChat() {
+      if (state.isStreaming && state.abortController) {
+        state.abortController.abort();
+      }
+      state.activeThreadId = null;
+      state.userScrolledUp = false;
+      saveThreads();
+      renderThread();
+      renderHistoryList();
+      el.promptInput.focus();
+    }
+
+    async function sendUserMessage(rawText) {
+      const text = rawText.trim();
+      if (!text || state.isStreaming) return;
+
+      let thread = getActiveThread();
+      if (!thread) {
+        thread = {
+          id: `t_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          title: text.length > 44 ? `${text.slice(0, 44)}…` : text,
+          mode: state.mode,
+          updatedAt: Date.now(),
+          messages: []
+        };
+        state.threads.unshift(thread);
+        state.activeThreadId = thread.id;
+      } else {
+        thread.updatedAt = Date.now();
+        thread.mode = state.mode;
+      }
+
+      const userMsg = {
+        id: `m_${Date.now()}_u`,
+        role: 'user',
+        content: text
+      };
+      thread.messages.push(userMsg);
+      state.userScrolledUp = false;
+
+      el.promptInput.value = '';
+      el.growableWrap.dataset.replicatedValue = '';
+      saveThreads();
+      syncViewChrome();
+      updateMessageDOM(userMsg, false);
+      renderHistoryList();
+      scrollToBottom(true);
+
+      fluidSim.triggerConversationPulse('user');
+      await runAssistantTurn(thread);
+    }
+
+    async function runAssistantTurn(thread) {
+      const aiMsg = {
+        id: `m_${Date.now()}_a`,
+        role: 'assistant',
+        mode: state.mode,
+        status: 'thinking',
+        content: ''
+      };
+      thread.messages.push(aiMsg);
+      updateMessageDOM(aiMsg, true);
+      scrollToBottom(false);
+
+      state.isStreaming = true;
+      state.abortController = new AbortController();
+      el.askBtn.textContent = 'Stop';
+      el.askBtn.classList.add('is-stop');
+
+      let firstTokenFired = false;
+      try {
+        await streamAIResponse({
+          thread,
+          mode: state.mode,
+          signal: state.abortController.signal,
+          onToken(chunk) {
+            if (!firstTokenFired) {
+              firstTokenFired = true;
+              aiMsg.status = 'streaming';
+              fluidSim.triggerConversationPulse('ai');
+            }
+            aiMsg.content += chunk;
+            updateMessageDOM(aiMsg, true);
+            scrollToBottom(false);
+          }
+        });
+        if (!firstTokenFired && !aiMsg.content) {
+          aiMsg.content = 'No response returned.';
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          if (!aiMsg.content) aiMsg.content = '_Generation stopped._';
+        } else {
+          aiMsg.isError = true;
+          aiMsg.content = `**Request Error:** ${err.message}\n\nClick **Regenerate** to try again, switch to a fallback model in **API Setup**, or clear the key to use Demo Mode.`;
+        }
+      } finally {
+        aiMsg.status = 'done';
+        thread.updatedAt = Date.now();
+        state.isStreaming = false;
+        state.abortController = null;
+        el.askBtn.textContent = 'Ask NEXA';
+        el.askBtn.classList.remove('is-stop');
+        saveThreads();
+        updateMessageDOM(aiMsg, true);
+        renderHistoryList();
+        scrollToBottom(false);
+        el.liveAnnouncer.textContent = 'NEXA finished responding.';
+      }
+    }
+
+    // Delegated clicks inside chat thread (copy code, copy message, regenerate)
+    el.chatThread.addEventListener('click', async (event) => {
+      const copyCodeBtn = event.target.closest('.copy-code-btn');
+      if (copyCodeBtn) {
+        const card = copyCodeBtn.closest('.msg-card-ai');
+        const idx = Number(copyCodeBtn.dataset.codeIdx);
+        const code = card?._codeBlocks?.[idx]?.code;
+        if (code !== undefined) {
+          await navigator.clipboard.writeText(code);
+          copyCodeBtn.textContent = 'Copied!';
+          showToast('Code copied to clipboard');
+          setTimeout(() => { copyCodeBtn.textContent = 'Copy'; }, 1600);
+        }
+        return;
+      }
+
+      const actionBtn = event.target.closest('[data-action]');
+      if (!actionBtn) return;
+      const row = actionBtn.closest('.msg-row');
+      const thread = getActiveThread();
+      if (!row || !thread) return;
+      const msg = thread.messages.find((m) => m.id === row.dataset.msgId);
+      if (!msg) return;
+
+      if (actionBtn.dataset.action === 'copy-msg') {
+        await navigator.clipboard.writeText(msg.content || '');
+        actionBtn.textContent = 'Copied!';
+        showToast('Response copied');
+        setTimeout(() => { actionBtn.textContent = 'Copy'; }, 1600);
+      } else if (actionBtn.dataset.action === 'regen-msg' && !state.isStreaming) {
+        const idx = thread.messages.indexOf(msg);
+        if (idx !== -1) {
+          thread.messages.splice(idx, 1);
+          renderThread();
+          await runAssistantTurn(thread);
+        }
+      }
+    });
+
+    // --------------------------------------------------------------------------
+    // 10. Auto-Growing Textarea & IME-Safe Enter-to-Submit
+    // --------------------------------------------------------------------------
+    if (!CSS.supports('field-sizing', 'content')) {
+      el.promptInput.addEventListener('input', () => {
+        el.growableWrap.dataset.replicatedValue = el.promptInput.value;
+      });
+    }
+
+    el.promptInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        if (event.isComposing || event.keyCode === 229) return;
+        if (state.isStreaming) return;
+        el.promptForm.requestSubmit();
+      }
+    });
+
+    el.promptForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (state.isStreaming && state.abortController) {
+        state.abortController.abort();
+        return;
+      }
+      sendUserMessage(el.promptInput.value);
+    });
+
+    el.starterChips.addEventListener('click', (event) => {
+      const chip = event.target.closest('.chip-btn');
+      if (!chip) return;
+      sendUserMessage(chip.dataset.prompt || chip.textContent);
+    });
+
+    el.brandHomeBtn.addEventListener('click', () => {
+      startNewChat();
+    });
+
+    el.primaryCtaBtn.addEventListener('click', () => {
+      const thread = getActiveThread();
+      if (thread && thread.messages.length > 0) {
+        startNewChat();
+      } else {
+        openSettingsModal();
+      }
+    });
+
+    el.inkMotionBtn.addEventListener('click', () => {
+      state.inkPaused = !state.inkPaused;
+      fluidSim.setPaused(state.inkPaused);
+      el.inkMotionBtn.textContent = state.inkPaused ? 'Play ink' : 'Pause ink';
+    });
+    if (state.inkPaused) {
+      el.inkMotionBtn.textContent = 'Play ink';
+    }
+
+    // --------------------------------------------------------------------------
+    // 11. Settings Modal (<dialog> + top-layer exit & light-dismiss fallbacks)
+    // --------------------------------------------------------------------------
+    let supportsDisplayTransition;
+    function canTransitionDisplay() {
+      if (supportsDisplayTransition !== undefined) return supportsDisplayTransition;
+      if (!window.CSS?.supports?.('transition-behavior', 'allow-discrete') || !document.body) {
+        return false;
+      }
+      const probe = document.createElement('div');
+      probe.style.cssText = 'transition: display 1s allow-discrete !important; display: block;';
+      document.body.appendChild(probe);
+      getComputedStyle(probe).display;
+      probe.style.display = 'none';
+      supportsDisplayTransition = getComputedStyle(probe).display === 'block';
+      probe.remove();
+      return supportsDisplayTransition;
+    }
+
+    function supportsTopLayerExit() {
+      return Boolean(window.CSS?.supports?.('overlay', 'auto')) && canTransitionDisplay();
+    }
+
+    async function closeTopLayerDialog(dialog) {
+      if (!dialog.open) return;
+      if (!supportsTopLayerExit()) {
+        dialog.setAttribute('data-closing', '');
+        const animations = dialog.getAnimations({ subtree: true });
+        if (animations.length > 0) {
+          await Promise.race([
+            Promise.allSettled(animations.map((a) => a.finished)),
+            new Promise((r) => setTimeout(r, 400))
+          ]);
+        }
+        if (!dialog.hasAttribute('data-closing')) return;
+        dialog.removeAttribute('data-closing');
+      }
+      dialog.close();
+    }
+
+    function updateSettingsBanner() {
+      const { apiKey, model, endpoint } = state.settings;
+      if (endpoint && endpoint.trim()) {
+        el.connectionStatusText.textContent = `Custom endpoint active (${endpoint.trim()})`;
+      } else if (apiKey && apiKey.trim()) {
+        el.connectionStatusText.textContent = `Gemini API connected (${model})`;
+      } else {
+        el.connectionStatusText.textContent = 'Built-in Smart Demo Mode active';
+      }
+    }
+
+    function syncModelInputs(modelValue) {
+      const val = modelValue || DEFAULT_GEMINI_MODEL;
+      const presetValues = Array.from(el.geminiModelSelect.options)
+        .map((o) => o.value)
+        .filter((v) => v !== 'custom');
+
+      if (presetValues.includes(val)) {
+        el.geminiModelSelect.value = val;
+        el.geminiCustomModelInput.hidden = true;
+        el.geminiCustomModelInput.value = '';
+      } else {
+        el.geminiModelSelect.value = 'custom';
+        el.geminiCustomModelInput.hidden = false;
+        el.geminiCustomModelInput.value = val;
+      }
+    }
+
+    function openSettingsModal() {
+      el.geminiKeyInput.value = state.settings.apiKey || '';
+      syncModelInputs(state.settings.model || DEFAULT_GEMINI_MODEL);
+      el.customEndpointInput.value = state.settings.endpoint || '';
+      updateSettingsBanner();
+      el.settingsDialog.showModal();
+    }
+
+    el.geminiModelSelect.addEventListener('change', () => {
+      const isCustom = el.geminiModelSelect.value === 'custom';
+      el.geminiCustomModelInput.hidden = !isCustom;
+      if (isCustom && !el.geminiCustomModelInput.value) {
+        el.geminiCustomModelInput.value = DEFAULT_GEMINI_MODEL;
+        el.geminiCustomModelInput.focus();
+      }
+    });
+
+    el.openSettingsIcon.addEventListener('click', openSettingsModal);
+    el.settingsCloseBtn.addEventListener('click', () => closeTopLayerDialog(el.settingsDialog));
+
+    el.toggleKeyVis.addEventListener('click', () => {
+      const isPassword = el.geminiKeyInput.type === 'password';
+      el.geminiKeyInput.type = isPassword ? 'text' : 'password';
+      el.toggleKeyVis.textContent = isPassword ? 'Hide' : 'Show';
+      el.toggleKeyVis.setAttribute('aria-label', isPassword ? 'Hide API key' : 'Show API key');
+    });
+
+    el.clearSettingsBtn.addEventListener('click', () => {
+      state.settings = { apiKey: '', model: DEFAULT_GEMINI_MODEL, endpoint: '', modelMigrated: true };
+      localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(state.settings));
+      el.geminiKeyInput.value = '';
+      syncModelInputs(DEFAULT_GEMINI_MODEL);
+      el.customEndpointInput.value = '';
+      updateSettingsBanner();
+      showToast('Reverted to built-in Demo Mode');
+    });
+
+    el.settingsForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const chosenModel = el.geminiModelSelect.value === 'custom'
+        ? (el.geminiCustomModelInput.value.trim() || DEFAULT_GEMINI_MODEL)
+        : el.geminiModelSelect.value;
+      state.settings = {
+        apiKey: el.geminiKeyInput.value.trim(),
+        model: chosenModel,
+        endpoint: el.customEndpointInput.value.trim(),
+        modelMigrated: true
+      };
+      localStorage.setItem(STORAGE_KEYS.settings, JSON.stringify(state.settings));
+      updateSettingsBanner();
+      closeTopLayerDialog(el.settingsDialog);
+      showToast('Settings saved locally');
+    });
+
+    el.settingsDialog.addEventListener('cancel', (event) => {
+      if (event.cancelable) {
+        event.preventDefault();
+        closeTopLayerDialog(el.settingsDialog);
+      }
+    });
+
+    el.settingsDialog.addEventListener('close', () => {
+      el.settingsDialog.returnValue = '';
+    });
+
+    // Fallback for browsers without closedby="any"
+    if (!('closedBy' in HTMLDialogElement.prototype)) {
+      let pressedOutside = false;
+      const isOutside = (e) => {
+        const r = el.settingsDialog.getBoundingClientRect();
+        return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+      };
+      el.settingsDialog.addEventListener('pointerdown', (e) => { pressedOutside = isOutside(e); });
+      el.settingsDialog.addEventListener('pointerup', (e) => {
+        if (pressedOutside && isOutside(e)) closeTopLayerDialog(el.settingsDialog);
+      });
+    }
+
+    // --------------------------------------------------------------------------
+    // 12. Slide-Over History Drawer (Navigation Drawer pattern + CRUD)
+    // --------------------------------------------------------------------------
+    function renderHistoryList() {
+      el.historyList.replaceChildren();
+      const sorted = [...state.threads].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      el.historyCountLabel.textContent = `${sorted.length} saved ${sorted.length === 1 ? 'thread' : 'threads'}`;
+
+      if (sorted.length === 0) {
+        const empty = document.createElement('li');
+        empty.className = 'history-empty';
+        empty.textContent = 'No saved conversations yet. Send a message to start flowing.';
+        el.historyList.appendChild(empty);
+        return;
+      }
+
+      for (const thread of sorted) {
+        const li = document.createElement('li');
+        li.className = `history-item${thread.id === state.activeThreadId ? ' is-active' : ''}`;
+        li.dataset.threadId = thread.id;
+
+        if (state.renamingId === thread.id) {
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'history-rename-input';
+          input.value = thread.title || 'Untitled';
+          input.setAttribute('aria-label', 'Rename conversation');
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
+              e.preventDefault();
+              commitRename(thread.id, input.value);
+            } else if (e.key === 'Escape') {
+              e.stopPropagation();
+              state.renamingId = null;
+              renderHistoryList();
+            }
+          });
+          input.addEventListener('blur', () => commitRename(thread.id, input.value));
+          li.appendChild(input);
+          requestAnimationFrame(() => { input.focus(); input.select(); });
+        } else {
+          const selectBtn = document.createElement('button');
+          selectBtn.type = 'button';
+          selectBtn.className = 'history-select-btn';
+          selectBtn.dataset.action = 'open-thread';
+
+          const titleSpan = document.createElement('span');
+          titleSpan.className = 'history-item-title';
+          titleSpan.textContent = thread.title || 'Untitled conversation';
+
+          const metaSpan = document.createElement('span');
+          metaSpan.className = 'history-item-meta';
+          const modeLabel = FOCUS_MODES[thread.mode]?.label || 'Deep Work';
+          metaSpan.textContent = `${modeLabel} • ${thread.messages.length} msgs`;
+
+          selectBtn.append(titleSpan, metaSpan);
+          li.appendChild(selectBtn);
+
+          const actions = document.createElement('div');
+          actions.className = 'history-item-actions';
+
+          const renameBtn = document.createElement('button');
+          renameBtn.type = 'button';
+          renameBtn.className = 'mini-icon-btn';
+          renameBtn.dataset.action = 'rename-thread';
+          renameBtn.setAttribute('aria-label', `Rename ${thread.title}`);
+          renameBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'mini-icon-btn';
+          delBtn.dataset.action = 'delete-thread';
+          delBtn.setAttribute('aria-label', `Delete ${thread.title}`);
+          delBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m-9 0v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+          actions.append(renameBtn, delBtn);
+          li.appendChild(actions);
+        }
+
+        el.historyList.appendChild(li);
+      }
+    }
+
+    function commitRename(threadId, newTitle) {
+      const trimmed = newTitle.trim();
+      const thread = state.threads.find((t) => t.id === threadId);
+      if (thread && trimmed) {
+        thread.title = trimmed;
+        saveThreads();
+        syncViewChrome();
+      }
+      state.renamingId = null;
+      renderHistoryList();
+    }
+
+    el.historyList.addEventListener('click', (event) => {
+      const li = event.target.closest('.history-item');
+      if (!li) return;
+      const threadId = li.dataset.threadId;
+      const btn = event.target.closest('[data-action]');
+      if (!btn) return;
+
+      const action = btn.dataset.action;
+      if (action === 'open-thread') {
+        if (state.isStreaming && state.abortController) state.abortController.abort();
+        state.activeThreadId = threadId;
+        const thread = getActiveThread();
+        if (thread?.mode && FOCUS_MODES[thread.mode]) {
+          applyFocusMode(thread.mode, false);
+        }
+        saveThreads();
+        renderThread();
+        renderHistoryList();
+        closeDrawer();
+      } else if (action === 'rename-thread') {
+        state.renamingId = threadId;
+        renderHistoryList();
+      } else if (action === 'delete-thread') {
+        state.threads = state.threads.filter((t) => t.id !== threadId);
+        if (state.activeThreadId === threadId) {
+          state.activeThreadId = null;
+          renderThread();
+        }
+        saveThreads();
+        renderHistoryList();
+        showToast('Conversation deleted');
+      }
+    });
+
+    el.drawerNewChatBtn.addEventListener('click', () => {
+      startNewChat();
+      closeDrawer();
+    });
+
+    el.clearAllHistoryBtn.addEventListener('click', () => {
+      if (state.threads.length === 0) return;
+      state.threads = [];
+      state.activeThreadId = null;
+      saveThreads();
+      renderThread();
+      renderHistoryList();
+      showToast('All conversations cleared');
+    });
+
+    // Right-side Drawer Scroll-Snap Mechanics
+    let drawerHasOpened = false;
+    let drawerClosing = false;
+
+    async function openDrawer() {
+      renderHistoryList();
+      drawerHasOpened = false;
+      drawerClosing = false;
+      el.historyDrawer.showModal();
+      if (!CSS.supports('scroll-initial-target', 'nearest')) {
+        el.drawerScroller.scrollTo({ left: 0, behavior: 'instant' });
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      }
+      el.drawerScroller.scrollTo({ left: el.drawerSheet.offsetWidth, behavior: 'auto' });
+    }
+
+    function closeDrawer() {
+      drawerClosing = true;
+      if (el.drawerScroller.scrollLeft <= 1) {
+        el.historyDrawer.close();
+        el.historyOpenBtn.setAttribute('aria-expanded', 'false');
+        drawerHasOpened = false;
+        drawerClosing = false;
+        return;
+      }
+      el.drawerScroller.scrollTo({ left: 0, behavior: 'auto' });
+    }
+
+    if (!CSS.supports('animation-timeline: scroll()')) {
+      el.drawerScroller.addEventListener('scroll', () => {
+        const w = Math.max(1, el.drawerSheet.offsetWidth);
+        const ratio = Math.min(1, Math.max(0, el.drawerScroller.scrollLeft / w));
+        el.historyDrawer.style.setProperty('--drawer-backdrop', String(ratio));
+      }, { passive: true });
+    }
+
+    const visibleThreshold = 1 / Math.max(1, window.innerWidth);
+    const drawerObserver = new IntersectionObserver(
+      (entries) => {
+        const entry = entries.at(-1);
+        if (!entry) return;
+        if (entry.intersectionRatio >= 0.99 && el.historyDrawer.open) {
+          drawerHasOpened = true;
+          el.historyOpenBtn.setAttribute('aria-expanded', 'true');
+        }
+        if (entry.intersectionRatio < visibleThreshold && el.historyDrawer.open && (drawerHasOpened || drawerClosing)) {
+          el.historyDrawer.close();
+          el.historyOpenBtn.setAttribute('aria-expanded', 'false');
+          drawerHasOpened = false;
+          drawerClosing = false;
+        }
+      },
+      { root: el.historyDrawer, threshold: [visibleThreshold, 1] }
+    );
+    drawerObserver.observe(el.drawerSheet);
+
+    el.historyOpenBtn.addEventListener('click', openDrawer);
+    el.historyCloseBtn.addEventListener('click', closeDrawer);
+    el.historyDrawer.addEventListener('click', (event) => {
+      if (!el.drawerSheet.contains(event.target)) {
+        closeDrawer();
+      }
+    });
+    el.historyDrawer.addEventListener('cancel', (event) => {
+      if (event.cancelable) {
+        event.preventDefault();
+        closeDrawer();
+      }
+    });
+
+    // --------------------------------------------------------------------------
+    // 13. Boot Sequence
+    // --------------------------------------------------------------------------
+    applyFocusMode(state.mode, false);
+    renderThread();
+    renderHistoryList();
+    initLenis();
+
+    requestAnimationFrame(() => {
+      el.appShell.classList.add('is-ready');
+    });
+  </script>
+</body>
+</html>
