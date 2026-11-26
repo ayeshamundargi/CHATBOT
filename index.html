@@ -1608,6 +1608,645 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+
+    /* ==========================================================================
+       10. Workspace Page Switching (Chat | Goals | Analytics)
+       ========================================================================== */
+    .page-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.2rem;
+      padding: 0.2rem;
+      border-radius: 9999px;
+      background: var(--glass-fill);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .page-nav-btn {
+      min-block-size: 2rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--body-muted);
+      white-space: nowrap;
+      transition: color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .page-nav-btn:hover {
+      color: var(--on-media);
+    }
+
+    .page-nav-btn[aria-current="page"] {
+      color: var(--on-media);
+      background: rgba(255, 255, 255, 0.14);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+    }
+
+    .account-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      min-block-size: 2.5rem;
+      padding: 0.25rem 0.75rem 0.25rem 0.35rem;
+      border-radius: 9999px;
+      background: var(--glass-fill);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--heading);
+      white-space: nowrap;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .account-pill:hover {
+      background: var(--glass-fill-hover);
+      border-color: var(--glass-border-strong);
+    }
+
+    .account-avatar {
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      color: var(--on-media);
+      font-size: 0.72rem;
+      font-weight: 500;
+    }
+
+    @media (max-width: 1080px) {
+      .top-nav .page-nav {
+        display: none;
+      }
+      .mobile-mode-bar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0 1rem 0.5rem;
+        flex-shrink: 0;
+        position: relative;
+        z-index: 15;
+      }
+      .mobile-mode-bar .mode-switcher {
+        display: inline-flex;
+      }
+    }
+
+    @media (min-width: 640px) and (max-width: 1080px) {
+      .mobile-mode-bar .mode-switcher {
+        display: none;
+      }
+    }
+
+    @media (max-width: 639px) {
+      .account-name-text {
+        display: none;
+      }
+      .account-pill {
+        padding: 0.25rem;
+      }
+      .pill-cta {
+        padding: 0.45rem 0.85rem;
+        font-size: 0.8rem;
+      }
+    }
+
+    .app-shell[data-page="goals"] .hero-intro,
+    .app-shell[data-page="goals"] .chat-scroll-wrap,
+    .app-shell[data-page="goals"] .composer-dock,
+    .app-shell[data-page="analytics"] .hero-intro,
+    .app-shell[data-page="analytics"] .chat-scroll-wrap,
+    .app-shell[data-page="analytics"] .composer-dock {
+      display: none !important;
+    }
+
+    .app-shell[data-page="goals"] .workspace,
+    .app-shell[data-page="analytics"] .workspace {
+      justify-content: flex-start;
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+
+    .hub-panel {
+      display: none;
+      width: 100%;
+      max-width: 56rem;
+      flex: 1;
+      min-height: 0;
+      margin-inline: auto;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 0.5rem 0.25rem 1.5rem;
+      scrollbar-width: auto;
+      scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+    }
+
+    .app-shell[data-page="goals"] #goals-panel,
+    .app-shell[data-page="analytics"] #analytics-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.125rem;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .app-shell[data-page="goals"] #goals-panel,
+      .app-shell[data-page="analytics"] #analytics-panel {
+        animation: thread-enter 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+    }
+
+    .hub-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.85rem;
+    }
+
+    .hub-title {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 500;
+      letter-spacing: -0.025em;
+      color: var(--on-media);
+    }
+
+    .hub-sub {
+      margin: 0.2rem 0 0;
+      font-size: 0.875rem;
+      color: var(--body-muted);
+    }
+
+    .glass-card {
+      padding: 1.125rem 1.25rem;
+      border-radius: 1.25rem;
+      background: var(--glass-dark);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
+    }
+
+    /* ==========================================================================
+       11. Login Page (Full-Bleed Fluid Ink Glass Card)
+       ========================================================================== */
+    .auth-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 35;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+      overflow-y: auto;
+    }
+
+    .auth-screen[hidden] {
+      display: none;
+    }
+
+    .auth-card {
+      width: min(27.5rem, 100%);
+      padding: 1.75rem;
+      border-radius: 1.5rem;
+      background: rgba(9, 12, 26, 0.8);
+      border: 1px solid var(--glass-border-strong);
+      backdrop-filter: blur(26px);
+      -webkit-backdrop-filter: blur(26px);
+      box-shadow: 0 28px 90px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .auth-card {
+        animation: lumen-fade-up 520ms cubic-bezier(0.215, 0.61, 0.355, 1) both;
+      }
+    }
+
+    .auth-brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .auth-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 1.125rem;
+      font-weight: 500;
+      color: var(--on-media);
+    }
+
+    .auth-badge {
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      background: var(--glass-fill);
+      border: 1px solid var(--glass-border);
+      font-size: 0.72rem;
+      color: var(--body-muted);
+    }
+
+    .auth-heading {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 500;
+      letter-spacing: -0.025em;
+      color: var(--on-media);
+    }
+
+    .auth-sub {
+      margin: 0.25rem 0 0;
+      font-size: 0.875rem;
+      color: var(--body-muted);
+    }
+
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .auth-tab {
+      position: relative;
+      min-block-size: 2.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--body-muted);
+      transition: color 0.2s ease;
+    }
+
+    .auth-tab:hover {
+      color: var(--on-media);
+    }
+
+    .auth-tab[aria-selected="true"] {
+      color: var(--on-media);
+    }
+
+    .auth-tab[aria-selected="true"]::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 -1px;
+      border-block-end: 2px solid var(--accent);
+    }
+
+    .auth-panel-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 0.95rem;
+      padding-top: 0.25rem;
+    }
+
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .error-msg {
+      display: none;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.78125rem;
+      color: #fca5a5;
+      margin-top: 0.15rem;
+    }
+
+    .error-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1rem;
+      height: 1rem;
+      border-radius: 9999px;
+      background: rgba(248, 113, 113, 0.22);
+      color: #fca5a5;
+      font-size: 0.68rem;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+
+    .glass-input:is(:user-invalid, .user-invalid-fallback) {
+      border-color: #f87171;
+      background-color: rgba(248, 113, 113, 0.08);
+    }
+
+    .glass-input:is(:user-valid, .user-valid-fallback) {
+      border-color: rgba(52, 211, 153, 0.65);
+    }
+
+    .field-group:has(.glass-input:is(:user-invalid, .user-invalid-fallback)) .error-msg {
+      display: flex;
+    }
+
+    .auth-form-error {
+      display: none;
+      padding: 0.65rem 0.85rem;
+      border-radius: 0.75rem;
+      background: rgba(248, 113, 113, 0.14);
+      border: 1px solid rgba(248, 113, 113, 0.38);
+      color: #fecaca;
+      font-size: 0.8125rem;
+    }
+
+    .auth-form-error.is-visible {
+      display: block;
+    }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--body-muted);
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    /* ==========================================================================
+       12. Solving Goals & Analytics Cards
+       ========================================================================== */
+    .goal-create-form {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 0.65rem;
+      align-items: end;
+    }
+
+    @media (max-width: 720px) {
+      .goal-create-form {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .goal-filter-group {
+      display: inline-flex;
+      gap: 0.25rem;
+      padding: 0.2rem;
+      border-radius: 9999px;
+      background: var(--glass-fill);
+      border: 1px solid var(--glass-border);
+    }
+
+    .goal-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr));
+      gap: 1rem;
+    }
+
+    .goal-card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .goal-card.is-solved {
+      border-color: rgba(52, 211, 153, 0.35);
+    }
+
+    .goal-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.65rem;
+    }
+
+    .goal-badges {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .status-pill {
+      padding: 0.15rem 0.55rem;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--body-muted);
+    }
+
+    .status-pill.is-solved {
+      background: rgba(52, 211, 153, 0.18);
+      color: #6ee7b7;
+    }
+
+    .goal-title {
+      margin: 0;
+      font-size: 1.0625rem;
+      font-weight: 500;
+      color: var(--on-media);
+      line-height: 1.35;
+    }
+
+    .goal-progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 0.78rem;
+      color: var(--body-muted);
+    }
+
+    .goal-progress-track {
+      flex: 1;
+      height: 0.4rem;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+    }
+
+    .goal-progress-fill {
+      height: 100%;
+      border-radius: 9999px;
+      background: var(--accent);
+      transition: width 0.32s ease;
+    }
+
+    .goal-steps {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .goal-step-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.55rem;
+      font-size: 0.875rem;
+      color: var(--heading);
+      cursor: pointer;
+    }
+
+    .goal-step-checkbox {
+      margin-top: 0.2rem;
+      accent-color: var(--accent);
+      width: 1rem;
+      height: 1rem;
+      flex-shrink: 0;
+    }
+
+    .goal-step-label.is-done span {
+      text-decoration: line-through;
+      color: var(--body-muted);
+      opacity: 0.75;
+    }
+
+    .goal-add-step-row {
+      display: flex;
+      gap: 0.45rem;
+    }
+
+    .goal-card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding-top: 0.25rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Analytics Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.85rem;
+    }
+
+    @media (max-width: 820px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .kpi-card {
+      padding: 1rem 1.1rem;
+      border-radius: 1.15rem;
+      background: var(--glass-dark);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(18px);
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .kpi-label {
+      font-size: 0.78125rem;
+      color: var(--body-muted);
+    }
+
+    .kpi-value {
+      font-size: 1.625rem;
+      font-weight: 500;
+      letter-spacing: -0.025em;
+      color: var(--on-media);
+    }
+
+    .kpi-note {
+      font-size: 0.75rem;
+      color: var(--accent);
+    }
+
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    @media (max-width: 760px) {
+      .analytics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .chart-title {
+      margin: 0 0 0.9rem;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--on-media);
+    }
+
+    .mode-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .mode-bar-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .mode-bar-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8125rem;
+      color: var(--heading);
+    }
+
+    .mode-bar-track {
+      height: 0.5rem;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .mode-bar-fill {
+      height: 100%;
+      border-radius: 9999px;
+      transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .activity-svg {
+      width: 100%;
+      height: 10.5rem;
+      display: block;
+    }
+
+    .insights-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.85rem;
+    }
+
+    .insights-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      font-size: 0.84375rem;
+      color: var(--body-muted);
+    }
+
+    .insights-stats strong {
+      color: var(--on-media);
+      font-weight: 500;
+    }
   </style>
 </head>
 <body>
@@ -1619,8 +2258,173 @@
   <!-- z-1: Radial Legibility Scrim -->
   <div class="bg-scrim" aria-hidden="true"></div>
 
+  <!-- ==========================================================================
+       Login Page Overlay (renders over live WebGL fluid canvas when signed out)
+       ========================================================================== -->
+  <section class="auth-screen" id="auth-screen" aria-label="Sign in to NEXA" hidden>
+    <div class="auth-card">
+      <div class="auth-brand-row">
+        <div class="auth-brand">
+          <svg class="brand-glyph" aria-hidden="true" viewBox="0 0 28 28" fill="none">
+            <path d="M3 11.5C6.2 7 9.8 7 14 11.5C18.2 16 21.8 16 25 11.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M3 16.5C6.2 21 9.8 21 14 16.5C18.2 12 21.8 12 25 16.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.72"/>
+          </svg>
+          <span>NEXA</span>
+        </div>
+        <span class="auth-badge">Fluid Intelligence</span>
+      </div>
+
+      <div>
+        <h1 class="auth-heading" id="auth-heading">Welcome back</h1>
+        <p class="auth-sub" id="auth-subheading">Sign in to sync your conversations, goals, and workspace analytics.</p>
+      </div>
+
+      <div class="auth-tabs" role="tablist" focusgroup="tablist nomemory" aria-label="Authentication mode" id="auth-tablist">
+        <button type="button" class="auth-tab" role="tab" id="tab-signin" aria-selected="true" focusgroupstart>Sign In</button>
+        <button type="button" class="auth-tab" role="tab" id="tab-signup" aria-selected="false">Create Account</button>
+      </div>
+
+      <div id="auth-form-error" class="auth-form-error" role="alert"></div>
+
+      <!-- Sign In Panel -->
+      <div role="tabpanel" id="panel-signin" aria-labelledby="tab-signin" tabindex="0">
+        <div class="auth-panel-inner">
+          <form class="auth-form" id="signin-form" novalidate>
+            <div class="field-group">
+              <label class="field-label" for="signin-email">Email</label>
+              <span id="signin-email-hint" class="field-hint">Format: you@example.com</span>
+              <input
+                type="email"
+                id="signin-email"
+                name="email"
+                class="glass-input"
+                autocomplete="username"
+                spellcheck="false"
+                enterkeyhint="next"
+                required
+                aria-describedby="signin-email-hint"
+                data-error="signin-email-error"
+                placeholder="you@example.com"
+              >
+              <div id="signin-email-error" class="error-msg">
+                <span class="error-badge" role="img" aria-label="Error">!</span>
+                <span>Enter an email address in the format you@example.com.</span>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="signin-password">Password</label>
+              <div class="input-row">
+                <input
+                  type="password"
+                  id="signin-password"
+                  name="password"
+                  class="glass-input"
+                  autocomplete="current-password"
+                  enterkeyhint="done"
+                  required
+                  minlength="6"
+                  data-error="signin-password-error"
+                  placeholder="At least 6 characters"
+                  style="padding-right: 3.75rem;"
+                >
+                <button type="button" class="toggle-vis-btn auth-vis-toggle" data-target="signin-password" aria-label="Show password">Show</button>
+              </div>
+              <div id="signin-password-error" class="error-msg">
+                <span class="error-badge" role="img" aria-label="Error">!</span>
+                <span>Enter your password (at least 6 characters).</span>
+              </div>
+            </div>
+
+            <button type="submit" class="pill-cta" style="width: 100%; margin-top: 0.25rem;">Sign In</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Create Account Panel -->
+      <div role="tabpanel" id="panel-signup" aria-labelledby="tab-signup" hidden="until-found">
+        <div class="auth-panel-inner">
+          <form class="auth-form" id="signup-form" novalidate>
+            <div class="field-group">
+              <label class="field-label" for="signup-name">Full name</label>
+              <input
+                type="text"
+                id="signup-name"
+                name="fullname"
+                class="glass-input"
+                autocomplete="name"
+                enterkeyhint="next"
+                required
+                data-error="signup-name-error"
+                placeholder="Ayesha Mundargi"
+              >
+              <div id="signup-name-error" class="error-msg">
+                <span class="error-badge" role="img" aria-label="Error">!</span>
+                <span>Please enter your name.</span>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="signup-email">Email</label>
+              <span id="signup-email-hint" class="field-hint">Format: you@example.com</span>
+              <input
+                type="email"
+                id="signup-email"
+                name="email"
+                class="glass-input"
+                autocomplete="username"
+                spellcheck="false"
+                enterkeyhint="next"
+                required
+                aria-describedby="signup-email-hint"
+                data-error="signup-email-error"
+                placeholder="you@example.com"
+              >
+              <div id="signup-email-error" class="error-msg">
+                <span class="error-badge" role="img" aria-label="Error">!</span>
+                <span>Enter a valid email address.</span>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="signup-password">Password</label>
+              <span id="signup-pw-hint" class="field-hint">At least 6 characters</span>
+              <div class="input-row">
+                <input
+                  type="password"
+                  id="signup-password"
+                  name="new-password"
+                  class="glass-input"
+                  autocomplete="new-password"
+                  enterkeyhint="done"
+                  required
+                  minlength="6"
+                  aria-describedby="signup-pw-hint"
+                  data-error="signup-password-error"
+                  placeholder="Create a password"
+                  style="padding-right: 3.75rem;"
+                >
+                <button type="button" class="toggle-vis-btn auth-vis-toggle" data-target="signup-password" aria-label="Show password">Show</button>
+              </div>
+              <div id="signup-password-error" class="error-msg">
+                <span class="error-badge" role="img" aria-label="Error">!</span>
+                <span>Password must be at least 6 characters.</span>
+              </div>
+            </div>
+
+            <button type="submit" class="pill-cta" style="width: 100%; margin-top: 0.25rem;">Create Account</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="auth-divider"><span>or</span></div>
+
+      <button type="button" class="ghost-btn" id="guest-signin-btn" style="width: 100%;">Continue as Guest</button>
+    </div>
+  </section>
+
   <!-- Main Interactive Shell -->
-  <div class="app-shell" id="app-shell" data-view="hero">
+  <div class="app-shell" id="app-shell" data-view="hero" data-page="chat">
     <!-- Top Navigation (z-20) -->
     <header class="top-nav reveal-item" style="--enter-delay: 150ms;">
       <button type="button" class="brand-btn" id="brand-home-btn" aria-label="NEXA Home">
@@ -1640,6 +2444,12 @@
       </div>
 
       <div class="nav-actions">
+        <nav class="page-nav" aria-label="Workspace views">
+          <button type="button" class="page-nav-btn" data-page-target="chat" aria-current="page">Chat</button>
+          <button type="button" class="page-nav-btn" data-page-target="goals">Goals</button>
+          <button type="button" class="page-nav-btn" data-page-target="analytics">Analytics</button>
+        </nav>
+
         <button type="button" class="glass-icon-btn" id="open-settings-icon" aria-label="API &amp; workspace settings">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" stroke="currentColor" stroke-width="1.8"/>
@@ -1661,11 +2471,22 @@
             <path d="M4 7h16M4 12h12M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
         </button>
+
+        <button type="button" class="account-pill" id="account-btn" aria-label="Account and sign out">
+          <span class="account-avatar" id="account-avatar" aria-hidden="true">G</span>
+          <span class="account-name-text" id="account-name-text">Guest</span>
+        </button>
       </div>
     </header>
 
-    <!-- Mobile Focus Mode Switcher (<640px) -->
+    <!-- Mobile Workspace + Focus Mode Switcher (<1080px / <640px) -->
     <div class="mobile-mode-bar reveal-item" style="--enter-delay: 220ms;">
+      <nav class="page-nav" aria-label="Mobile workspace views">
+        <button type="button" class="page-nav-btn" data-page-target="chat" aria-current="page">Chat</button>
+        <button type="button" class="page-nav-btn" data-page-target="goals">Goals</button>
+        <button type="button" class="page-nav-btn" data-page-target="analytics">Analytics</button>
+      </nav>
+
       <div class="mode-switcher" role="group" aria-label="Focus mode" id="mobile-mode-switcher">
         <button type="button" class="mode-btn" data-mode="deep-work" aria-pressed="true">Deep Work</button>
         <button type="button" class="mode-btn" data-mode="code" aria-pressed="false">Code</button>
@@ -1721,6 +2542,97 @@
           <button type="button" class="chip-btn" data-prompt="Optimize an async data pipeline">Optimize an async data pipeline</button>
         </div>
       </div>
+
+      <!-- Solving Goals Panel -->
+      <section class="hub-panel" id="goals-panel" aria-label="Solving Goals">
+        <div class="hub-header">
+          <div>
+            <h2 class="hub-title">Solving Goals</h2>
+            <p class="hub-sub" id="goals-summary-text">Break down outcomes into clear steps and solve them directly with NEXA.</p>
+          </div>
+          <div class="goal-filter-group" role="group" aria-label="Filter goals" id="goal-filter-group">
+            <button type="button" class="mode-btn" data-goal-filter="all" aria-pressed="true">All</button>
+            <button type="button" class="mode-btn" data-goal-filter="active" aria-pressed="false">Active</button>
+            <button type="button" class="mode-btn" data-goal-filter="solved" aria-pressed="false">Solved</button>
+          </div>
+        </div>
+
+        <form class="glass-card goal-create-form" id="goal-create-form">
+          <div class="field-group">
+            <label class="field-label" for="new-goal-input">What goal do you want to solve?</label>
+            <input
+              id="new-goal-input"
+              class="glass-input"
+              type="text"
+              required
+              placeholder="e.g. Launch my portfolio site in 7 days"
+              autocomplete="off"
+            >
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="new-goal-mode">Mode</label>
+            <select id="new-goal-mode" class="glass-select">
+              <option value="deep-work">Deep Work</option>
+              <option value="code">Code</option>
+              <option value="creative">Creative</option>
+              <option value="concise">Concise</option>
+            </select>
+          </div>
+          <button type="submit" class="pill-cta">Add Goal</button>
+        </form>
+
+        <div class="goal-list" id="goal-list"></div>
+      </section>
+
+      <!-- Analytics Dashboard Panel -->
+      <section class="hub-panel" id="analytics-panel" aria-label="Workspace Analytics">
+        <div class="hub-header">
+          <div>
+            <h2 class="hub-title">Analytics</h2>
+            <p class="hub-sub">Live usage, focus distribution, and goal progress stored locally on your device.</p>
+          </div>
+          <button type="button" class="ghost-btn" id="reset-analytics-btn" style="min-block-size: 2.125rem; font-size: 0.8rem;">Reset Activity</button>
+        </div>
+
+        <div class="kpi-grid" id="analytics-kpis">
+          <div class="kpi-card">
+            <span class="kpi-label">Messages Exchanged</span>
+            <span class="kpi-value" id="kpi-messages">0</span>
+            <span class="kpi-note" id="kpi-messages-sub">0 prompts sent</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Conversations</span>
+            <span class="kpi-value" id="kpi-threads">0</span>
+            <span class="kpi-note" id="kpi-words-sub">0 words generated</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Goals Solved</span>
+            <span class="kpi-value" id="kpi-goals">0/0</span>
+            <span class="kpi-note" id="kpi-goals-sub">0% completion</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Today's Activity</span>
+            <span class="kpi-value" id="kpi-today">0</span>
+            <span class="kpi-note" id="kpi-top-mode">Top: Deep Work</span>
+          </div>
+        </div>
+
+        <div class="analytics-grid">
+          <div class="glass-card">
+            <h3 class="chart-title">Focus Mode Distribution</h3>
+            <div class="mode-bars" id="analytics-mode-bars"></div>
+          </div>
+          <div class="glass-card">
+            <h3 class="chart-title">7-Day Activity</h3>
+            <svg class="activity-svg" id="analytics-activity-svg" viewBox="0 0 320 140" role="img" aria-label="7-day message and goal activity chart"></svg>
+          </div>
+        </div>
+
+        <div class="glass-card insights-row">
+          <div class="insights-stats" id="analytics-insights"></div>
+          <button type="button" class="pill-cta" id="analytics-back-chat-btn">Back to Chat</button>
+        </div>
+      </section>
     </main>
 
     <!-- Footer (z-20) -->
@@ -1919,13 +2831,59 @@
       threads: 'nexa_threads_v1',
       activeId: 'nexa_active_thread_v1',
       settings: 'nexa_settings_v1',
-      mode: 'nexa_mode_v1'
+      mode: 'nexa_mode_v1',
+      session: 'nexa_session_v1',
+      users: 'nexa_users_v1',
+      goals: 'nexa_goals_v1',
+      activity: 'nexa_activity_v1'
     };
 
     const DEFAULT_GEMINI_MODEL = 'gemini-3.8-flash';
 
+    const DEFAULT_GOALS = [
+      {
+        id: 'g_starter_1',
+        title: 'Ship a full-stack AI portfolio project',
+        mode: 'code',
+        solved: false,
+        createdAt: Date.now() - 86400000,
+        steps: [
+          { id: 'gs_1', text: 'Define core MVP scope and target user workflow', done: true },
+          { id: 'gs_2', text: 'Implement streaming UI and error/retry resilience', done: true },
+          { id: 'gs_3', text: 'Deploy static site and verify mobile responsiveness', done: false }
+        ]
+      },
+      {
+        id: 'g_starter_2',
+        title: 'Master system design & scalable API patterns',
+        mode: 'deep-work',
+        solved: false,
+        createdAt: Date.now() - 43200000,
+        steps: [
+          { id: 'gs_4', text: 'Map stateless request lifecycle & caching boundaries', done: false },
+          { id: 'gs_5', text: 'Practice rate-limiting and idempotency patterns', done: false }
+        ]
+      }
+    ];
+
+    function loadInitialGoals() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEYS.goals);
+        if (raw === null) return structuredClone(DEFAULT_GOALS);
+        return JSON.parse(raw);
+      } catch {
+        return structuredClone(DEFAULT_GOALS);
+      }
+    }
+
     const state = {
       mode: localStorage.getItem(STORAGE_KEYS.mode) || 'deep-work',
+      page: 'chat',
+      goalFilter: 'all',
+      session: loadJSON(STORAGE_KEYS.session, null),
+      users: loadJSON(STORAGE_KEYS.users, []),
+      goals: loadInitialGoals(),
+      activity: loadJSON(STORAGE_KEYS.activity, {}),
       threads: loadJSON(STORAGE_KEYS.threads, []),
       activeThreadId: localStorage.getItem(STORAGE_KEYS.activeId) || null,
       settings: loadJSON(STORAGE_KEYS.settings, {
@@ -3123,6 +4081,12 @@
         return `Here's the **short version**:\n\n> ${firstPara.replace(/\n+/g, ' ').slice(0, 240)}\n\nWant me to condense it into a single sentence or bullet list?`;
       }
 
+      // 2b. Goal Solver requests from Solving Goals view
+      if (lower.startsWith('help me solve my goal:')) {
+        const goalTitle = q.replace(/^help me solve my goal:\s*/i, '').split('—')[0].trim().replace(/^["']|["']$/g, '');
+        return `Here is a focused, step-by-step plan to solve **${goalTitle}**:\n\n### 1. Immediate First Move (Next 20 Minutes)\n- Define the exact **definition of done** in one sentence so you avoid scope creep.\n- Complete one small, visible vertical slice before optimizing edge cases.\n\n### 2. Core Execution Milestones\n1. **Foundation:** Lock down the core inputs, structure, and critical path.\n2. **Build & Test:** Ship the working core early and test against one real-world scenario.\n3. **Polish & Ship:** Fix the highest-impact friction point and verify end-to-end.\n\n### 3. Watch Out For\n> **Common bottleneck:** Spending too long researching tools before testing your core assumption.\n\nWant me to break step 1 down into a 30-minute checklist or help you execute one of the milestones right now?`;
+      }
+
       // 3. Specific rich starter / common topics
       if (lower.includes('scalable api') || lower.includes('architect')) {
         if (mode === 'concise') {
@@ -3446,7 +4410,41 @@
       drawerNewChatBtn: document.getElementById('drawer-new-chat-btn'),
       historyList: document.getElementById('history-list'),
       historyCountLabel: document.getElementById('history-count-label'),
-      clearAllHistoryBtn: document.getElementById('clear-all-history-btn')
+      clearAllHistoryBtn: document.getElementById('clear-all-history-btn'),
+      // Auth screen & Account
+      authScreen: document.getElementById('auth-screen'),
+      authHeading: document.getElementById('auth-heading'),
+      authSubheading: document.getElementById('auth-subheading'),
+      authTablist: document.getElementById('auth-tablist'),
+      authFormError: document.getElementById('auth-form-error'),
+      signinForm: document.getElementById('signin-form'),
+      signupForm: document.getElementById('signup-form'),
+      guestSigninBtn: document.getElementById('guest-signin-btn'),
+      accountBtn: document.getElementById('account-btn'),
+      accountAvatar: document.getElementById('account-avatar'),
+      accountNameText: document.getElementById('account-name-text'),
+      // Goals & Analytics
+      goalsPanel: document.getElementById('goals-panel'),
+      goalCreateForm: document.getElementById('goal-create-form'),
+      newGoalInput: document.getElementById('new-goal-input'),
+      newGoalMode: document.getElementById('new-goal-mode'),
+      goalList: document.getElementById('goal-list'),
+      goalsSummaryText: document.getElementById('goals-summary-text'),
+      goalFilterGroup: document.getElementById('goal-filter-group'),
+      analyticsPanel: document.getElementById('analytics-panel'),
+      kpiMessages: document.getElementById('kpi-messages'),
+      kpiMessagesSub: document.getElementById('kpi-messages-sub'),
+      kpiThreads: document.getElementById('kpi-threads'),
+      kpiWordsSub: document.getElementById('kpi-words-sub'),
+      kpiGoals: document.getElementById('kpi-goals'),
+      kpiGoalsSub: document.getElementById('kpi-goals-sub'),
+      kpiToday: document.getElementById('kpi-today'),
+      kpiTopMode: document.getElementById('kpi-top-mode'),
+      analyticsModeBars: document.getElementById('analytics-mode-bars'),
+      analyticsActivitySvg: document.getElementById('analytics-activity-svg'),
+      analyticsInsights: document.getElementById('analytics-insights'),
+      resetAnalyticsBtn: document.getElementById('reset-analytics-btn'),
+      analyticsBackChatBtn: document.getElementById('analytics-back-chat-btn')
     };
 
     const fluidSim = new FluidInkSimulation(el.fluidCanvas);
@@ -3572,9 +4570,11 @@
       el.heroIntro.inert = hasMessages;
       el.heroIntro.setAttribute('aria-hidden', String(hasMessages));
       el.primaryCtaBtn.textContent = hasMessages ? 'New Chat' : 'API Setup';
-      document.title = hasMessages && thread.title
-        ? `${thread.title} | NEXA`
-        : 'NEXA — Clarity in Every Conversation';
+      if (state.session && state.page === 'chat') {
+        document.title = hasMessages && thread.title
+          ? `${thread.title} | NEXA`
+          : 'NEXA — Clarity in Every Conversation';
+      }
     }
 
     function createLumenGlyphSvg(className) {
@@ -3754,6 +4754,7 @@
       };
       thread.messages.push(userMsg);
       state.userScrolledUp = false;
+      recordActivity('messages', 1);
 
       el.promptInput.value = '';
       el.growableWrap.dataset.replicatedValue = '';
@@ -3821,6 +4822,8 @@
         saveThreads();
         updateMessageDOM(aiMsg, true);
         renderHistoryList();
+        if (!aiMsg.isError) recordActivity('messages', 1);
+        if (state.page === 'analytics') renderAnalytics();
         scrollToBottom(false);
         el.liveAnnouncer.textContent = 'NEXA finished responding.';
       }
@@ -3899,12 +4902,14 @@
     });
 
     el.brandHomeBtn.addEventListener('click', () => {
+      switchPage('chat');
       startNewChat();
     });
 
     el.primaryCtaBtn.addEventListener('click', () => {
       const thread = getActiveThread();
       if (thread && thread.messages.length > 0) {
+        switchPage('chat');
         startNewChat();
       } else {
         openSettingsModal();
@@ -4179,6 +5184,7 @@
         saveThreads();
         renderThread();
         renderHistoryList();
+        switchPage('chat');
         closeDrawer();
       } else if (action === 'rename-thread') {
         state.renamingId = threadId;
@@ -4196,6 +5202,7 @@
     });
 
     el.drawerNewChatBtn.addEventListener('click', () => {
+      switchPage('chat');
       startNewChat();
       closeDrawer();
     });
@@ -4281,11 +5288,700 @@
     });
 
     // --------------------------------------------------------------------------
-    // 13. Boot Sequence
+    // 13. Login Page, Auth State, Validation & Tabs
+    // --------------------------------------------------------------------------
+    function todayKey(offsetDays = 0) {
+      const d = new Date();
+      d.setDate(d.getDate() + offsetDays);
+      return d.toISOString().slice(0, 10);
+    }
+
+    function recordActivity(field, delta = 1) {
+      const key = todayKey(0);
+      if (!state.activity[key]) {
+        state.activity[key] = { messages: 0, goalsSolved: 0 };
+      }
+      state.activity[key][field] = (state.activity[key][field] || 0) + delta;
+      try {
+        localStorage.setItem(STORAGE_KEYS.activity, JSON.stringify(state.activity));
+      } catch {}
+    }
+
+    async function hashPassword(password) {
+      if (window.crypto?.subtle) {
+        const bytes = new TextEncoder().encode(password);
+        const digest = await crypto.subtle.digest('SHA-256', bytes);
+        return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+      }
+      return btoa(unescape(encodeURIComponent(password)));
+    }
+
+    function saveSession(session) {
+      state.session = session;
+      try {
+        if (session) localStorage.setItem(STORAGE_KEYS.session, JSON.stringify(session));
+        else localStorage.removeItem(STORAGE_KEYS.session);
+      } catch {}
+      renderAuthGate();
+    }
+
+    function renderAuthGate() {
+      const signedIn = Boolean(state.session);
+      el.authScreen.hidden = signedIn;
+      el.appShell.inert = !signedIn;
+      el.appShell.setAttribute('aria-hidden', String(!signedIn));
+
+      if (signedIn) {
+        const displayName = state.session.name || 'Guest';
+        el.accountNameText.textContent = displayName.split(/\s+/)[0];
+        el.accountAvatar.textContent = displayName.trim().charAt(0).toUpperCase() || 'G';
+        el.accountBtn.setAttribute('aria-label', `${displayName} — click to sign out`);
+      } else {
+        document.title = 'Sign In | NEXA';
+      }
+    }
+
+    function showAuthError(msg) {
+      if (!msg) {
+        el.authFormError.textContent = '';
+        el.authFormError.classList.remove('is-visible');
+      } else {
+        el.authFormError.textContent = msg;
+        el.authFormError.classList.add('is-visible');
+      }
+    }
+
+    // Accessible validation synchronization (:user-invalid + aria-invalid + 500ms polite announcement)
+    function initFormValidation(root) {
+      const hasUserInvalid = CSS.supports('selector(:user-invalid)');
+      const dirtyState = new WeakMap();
+      const flagged = new WeakSet();
+      const announced = new WeakSet();
+      let announceTimer = null;
+      let announcedField = null;
+
+      const linkError = (input, shown) => {
+        const errorId = input.dataset.error;
+        if (!errorId) return;
+        const ids = (input.getAttribute('aria-describedby') || '').split(/\s+/).filter((id) => id && id !== errorId);
+        if (shown) ids.push(errorId);
+        if (ids.length) input.setAttribute('aria-describedby', ids.join(' '));
+        else input.removeAttribute('aria-describedby');
+      };
+
+      const announceFieldError = (input) => {
+        const errEl = document.getElementById(input.dataset.error);
+        if (!errEl) return;
+        const labelEl = input.labels?.[0];
+        const prefix = labelEl ? `${labelEl.textContent.trim()}: ` : '';
+        clearTimeout(announceTimer);
+        el.liveAnnouncer.textContent = '';
+        announcedField = input;
+        announceTimer = setTimeout(() => {
+          el.liveAnnouncer.textContent = prefix + errEl.textContent.replace(/\s+/g, ' ').trim();
+        }, 500);
+      };
+
+      const syncField = (input, announce = false, forceCheck = false) => {
+        if (!input?.matches?.('input, select, textarea') || !input.dataset.error) return;
+        let isInvalid = false;
+        if (hasUserInvalid) {
+          isInvalid = input.matches(':user-invalid') || (forceCheck && !input.validity.valid);
+        } else {
+          const st = dirtyState.get(input);
+          isInvalid = Boolean((forceCheck || st?.hasBlurred) && !input.validity.valid);
+          input.classList.toggle('user-invalid-fallback', isInvalid);
+          input.classList.toggle('user-valid-fallback', Boolean((forceCheck || st?.hasBlurred) && input.validity.valid));
+        }
+
+        if (isInvalid) {
+          if (announce && !announced.has(input)) {
+            announceFieldError(input);
+            announced.add(input);
+          }
+          input.setAttribute('aria-invalid', 'true');
+          linkError(input, true);
+          flagged.add(input);
+        } else if (flagged.has(input) || input.getAttribute('aria-invalid') !== 'true') {
+          input.setAttribute('aria-invalid', 'false');
+          linkError(input, false);
+          flagged.delete(input);
+          announced.delete(input);
+          if (announcedField === input) {
+            clearTimeout(announceTimer);
+            el.liveAnnouncer.textContent = '';
+          }
+        }
+      };
+
+      root.querySelectorAll('input[data-error]').forEach((inp) => inp.setAttribute('aria-invalid', 'false'));
+
+      root.addEventListener('blur', (e) => {
+        const st = dirtyState.get(e.target) || { hasInteracted: false, hasBlurred: false };
+        st.hasBlurred = true;
+        dirtyState.set(e.target, st);
+        if (st.hasInteracted || hasUserInvalid) syncField(e.target, true);
+      }, true);
+
+      root.addEventListener('input', (e) => {
+        const st = dirtyState.get(e.target) || { hasInteracted: false, hasBlurred: false };
+        st.hasInteracted = true;
+        dirtyState.set(e.target, st);
+        if (e.target.hasAttribute('aria-invalid')) syncField(e.target, false);
+      });
+
+      root.addEventListener('invalid', (e) => {
+        announced.add(e.target);
+        syncField(e.target, false, true);
+      }, true);
+
+      return { syncField };
+    }
+
+    const authValidation = initFormValidation(el.authScreen);
+
+    // Accessible Tabs (Sign In / Create Account)
+    const authTabs = Array.from(el.authTablist.querySelectorAll('[role="tab"]'));
+    const authPanels = {
+      'tab-signin': document.getElementById('panel-signin'),
+      'tab-signup': document.getElementById('panel-signup')
+    };
+
+    function selectAuthTab(tab, moveFocus = false) {
+      showAuthError('');
+      for (const t of authTabs) {
+        const active = t === tab;
+        t.setAttribute('aria-selected', String(active));
+        t.toggleAttribute('focusgroupstart', active);
+        const panel = authPanels[t.id];
+        if (panel) {
+          if (active) {
+            panel.removeAttribute('hidden');
+            panel.setAttribute('tabindex', '0');
+          } else {
+            panel.setAttribute('hidden', 'until-found');
+            panel.removeAttribute('tabindex');
+          }
+        }
+      }
+      const isSignup = tab.id === 'tab-signup';
+      el.authHeading.textContent = isSignup ? 'Create your workspace' : 'Welcome back';
+      el.authSubheading.textContent = isSignup
+        ? 'Create a local account to keep your threads, goals, and stats organized.'
+        : 'Sign in to sync your conversations, goals, and workspace analytics.';
+      if (moveFocus) tab.focus();
+    }
+
+    authTabs.forEach((tab) => {
+      tab.addEventListener('click', () => selectAuthTab(tab, false));
+    });
+
+    Object.values(authPanels).forEach((panel) => {
+      panel.addEventListener('beforematch', () => {
+        const tabId = panel.getAttribute('aria-labelledby');
+        const tab = document.getElementById(tabId);
+        if (tab) selectAuthTab(tab, false);
+      });
+    });
+
+    if (!Object.hasOwn(HTMLElement.prototype, 'focusGroup')) {
+      el.authTablist.addEventListener('keydown', (e) => {
+        const idx = authTabs.indexOf(document.activeElement);
+        if (idx === -1) return;
+        let nextIdx = null;
+        if (e.key === 'ArrowRight') nextIdx = (idx + 1) % authTabs.length;
+        else if (e.key === 'ArrowLeft') nextIdx = (idx - 1 + authTabs.length) % authTabs.length;
+        else if (e.key === 'Home') nextIdx = 0;
+        else if (e.key === 'End') nextIdx = authTabs.length - 1;
+        if (nextIdx !== null) {
+          e.preventDefault();
+          selectAuthTab(authTabs[nextIdx], true);
+        }
+      });
+    }
+
+    el.authScreen.querySelectorAll('.auth-vis-toggle').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const input = document.getElementById(btn.dataset.target);
+        if (!input) return;
+        const hidden = input.type === 'password';
+        input.type = hidden ? 'text' : 'password';
+        btn.textContent = hidden ? 'Hide' : 'Show';
+        btn.setAttribute('aria-label', hidden ? 'Hide password' : 'Show password');
+      });
+    });
+
+    el.signinForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showAuthError('');
+      const emailEl = document.getElementById('signin-email');
+      const pwEl = document.getElementById('signin-password');
+      if (!el.signinForm.checkValidity()) {
+        authValidation.syncField(emailEl, false, true);
+        authValidation.syncField(pwEl, false, true);
+        const firstInvalid = el.signinForm.querySelector(':invalid');
+        firstInvalid?.focus();
+        return;
+      }
+
+      const email = emailEl.value.trim().toLowerCase();
+      const pwHash = await hashPassword(pwEl.value);
+      const existing = state.users.find((u) => u.email === email);
+      if (existing) {
+        if (existing.pwHash !== pwHash) {
+          showAuthError('Incorrect password for that email. Try again or continue as Guest.');
+          pwEl.focus();
+          return;
+        }
+        saveSession({ name: existing.name, email: existing.email, isGuest: false });
+      } else {
+        // Auto-register smooth local sign-in if email isn't registered yet
+        const fallbackName = email.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        const user = { name: fallbackName || 'User', email, pwHash };
+        state.users.push(user);
+        try { localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(state.users)); } catch {}
+        saveSession({ name: user.name, email: user.email, isGuest: false });
+      }
+      fluidSim.triggerConversationPulse('ai');
+      syncViewChrome();
+      showToast(`Signed in as ${state.session.name}`);
+    });
+
+    el.signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showAuthError('');
+      const nameEl = document.getElementById('signup-name');
+      const emailEl = document.getElementById('signup-email');
+      const pwEl = document.getElementById('signup-password');
+      if (!el.signupForm.checkValidity()) {
+        authValidation.syncField(nameEl, false, true);
+        authValidation.syncField(emailEl, false, true);
+        authValidation.syncField(pwEl, false, true);
+        const firstInvalid = el.signupForm.querySelector(':invalid');
+        firstInvalid?.focus();
+        return;
+      }
+
+      const email = emailEl.value.trim().toLowerCase();
+      if (state.users.some((u) => u.email === email)) {
+        showAuthError('An account with that email already exists. Switch to Sign In.');
+        emailEl.focus();
+        return;
+      }
+
+      const name = nameEl.value.trim();
+      const pwHash = await hashPassword(pwEl.value);
+      const user = { name, email, pwHash };
+      state.users.push(user);
+      try { localStorage.setItem(STORAGE_KEYS.users, JSON.stringify(state.users)); } catch {}
+      saveSession({ name, email, isGuest: false });
+      fluidSim.triggerConversationPulse('ai');
+      syncViewChrome();
+      showToast(`Welcome to NEXA, ${name}!`);
+    });
+
+    el.guestSigninBtn.addEventListener('click', () => {
+      saveSession({ name: 'Guest', email: '', isGuest: true });
+      fluidSim.triggerConversationPulse('mode');
+      syncViewChrome();
+      showToast('Entered as Guest');
+    });
+
+    el.accountBtn.addEventListener('click', () => {
+      saveSession(null);
+      showToast('Signed out');
+      document.getElementById('signin-email')?.focus();
+    });
+
+    // --------------------------------------------------------------------------
+    // 14. Workspace Page Switching (Chat | Goals | Analytics)
+    // --------------------------------------------------------------------------
+    function switchPage(page) {
+      if (!['chat', 'goals', 'analytics'].includes(page)) return;
+      state.page = page;
+      el.appShell.dataset.page = page;
+
+      document.querySelectorAll('.page-nav-btn').forEach((btn) => {
+        if (btn.dataset.pageTarget === page) {
+          btn.setAttribute('aria-current', 'page');
+        } else {
+          btn.removeAttribute('aria-current');
+        }
+      });
+
+      if (page === 'goals') {
+        renderGoals();
+        document.title = 'Solving Goals | NEXA';
+      } else if (page === 'analytics') {
+        renderAnalytics();
+        document.title = 'Analytics | NEXA';
+      } else {
+        syncViewChrome();
+      }
+      fluidSim.triggerConversationPulse('mode');
+    }
+
+    document.querySelectorAll('.page-nav-btn').forEach((btn) => {
+      btn.addEventListener('click', () => switchPage(btn.dataset.pageTarget));
+    });
+
+    el.analyticsBackChatBtn.addEventListener('click', () => switchPage('chat'));
+
+    // --------------------------------------------------------------------------
+    // 15. Solving Goals Engine
+    // --------------------------------------------------------------------------
+    function saveGoals() {
+      try {
+        localStorage.setItem(STORAGE_KEYS.goals, JSON.stringify(state.goals));
+      } catch {}
+    }
+
+    function renderGoals() {
+      const total = state.goals.length;
+      const solvedCount = state.goals.filter((g) => g.solved).length;
+      el.goalsSummaryText.textContent = `${solvedCount} of ${total} ${total === 1 ? 'goal' : 'goals'} solved — click Solve with NEXA for a tailored action plan.`;
+
+      const filtered = state.goals.filter((g) => {
+        if (state.goalFilter === 'active') return !g.solved;
+        if (state.goalFilter === 'solved') return g.solved;
+        return true;
+      });
+
+      el.goalList.replaceChildren();
+      if (filtered.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'glass-card history-empty';
+        empty.textContent = state.goalFilter === 'all'
+          ? 'No goals yet. Add a goal above to break it down and solve it with NEXA.'
+          : `No ${state.goalFilter} goals right now.`;
+        el.goalList.appendChild(empty);
+        return;
+      }
+
+      for (const goal of filtered) {
+        const card = document.createElement('article');
+        card.className = `glass-card goal-card${goal.solved ? ' is-solved' : ''}`;
+        card.dataset.goalId = goal.id;
+
+        const top = document.createElement('div');
+        top.className = 'goal-card-top';
+
+        const badges = document.createElement('div');
+        badges.className = 'goal-badges';
+        const modeTag = document.createElement('span');
+        modeTag.className = 'msg-mode-tag';
+        modeTag.textContent = FOCUS_MODES[goal.mode]?.label || 'Deep Work';
+        const statusPill = document.createElement('span');
+        statusPill.className = `status-pill${goal.solved ? ' is-solved' : ''}`;
+        statusPill.textContent = goal.solved ? 'Solved' : 'Active';
+        badges.append(modeTag, statusPill);
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'mini-icon-btn';
+        delBtn.dataset.goalAction = 'delete';
+        delBtn.setAttribute('aria-label', `Delete goal ${goal.title}`);
+        delBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m-9 0v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+        top.append(badges, delBtn);
+
+        const title = document.createElement('h3');
+        title.className = 'goal-title';
+        title.textContent = goal.title;
+
+        const steps = goal.steps || [];
+        const doneCount = steps.filter((s) => s.done).length;
+        const pct = goal.solved ? 100 : (steps.length ? Math.round((doneCount / steps.length) * 100) : 0);
+
+        const progressWrap = document.createElement('div');
+        progressWrap.className = 'goal-progress-wrap';
+        const track = document.createElement('div');
+        track.className = 'goal-progress-track';
+        const fill = document.createElement('div');
+        fill.className = 'goal-progress-fill';
+        fill.style.width = `${pct}%`;
+        track.appendChild(fill);
+        const pctLabel = document.createElement('span');
+        pctLabel.textContent = steps.length ? `${doneCount}/${steps.length} steps (${pct}%)` : `${pct}%`;
+        progressWrap.append(track, pctLabel);
+
+        const ul = document.createElement('ul');
+        ul.className = 'goal-steps';
+        for (const step of steps) {
+          const li = document.createElement('li');
+          const lbl = document.createElement('label');
+          lbl.className = `goal-step-label${step.done ? ' is-done' : ''}`;
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.className = 'goal-step-checkbox';
+          cb.checked = Boolean(step.done);
+          cb.dataset.goalAction = 'toggle-step';
+          cb.dataset.stepId = step.id;
+          const span = document.createElement('span');
+          span.textContent = step.text;
+          lbl.append(cb, span);
+          li.appendChild(lbl);
+          ul.appendChild(li);
+        }
+
+        const addStepRow = document.createElement('form');
+        addStepRow.className = 'goal-add-step-row';
+        addStepRow.dataset.goalAction = 'add-step-form';
+        const stepInp = document.createElement('input');
+        stepInp.type = 'text';
+        stepInp.className = 'glass-input';
+        stepInp.style.minBlockSize = '2.15rem';
+        stepInp.style.fontSize = '0.82rem';
+        stepInp.placeholder = 'Add an action step…';
+        stepInp.setAttribute('aria-label', `Add step for ${goal.title}`);
+        const stepAddBtn = document.createElement('button');
+        stepAddBtn.type = 'submit';
+        stepAddBtn.className = 'ghost-btn';
+        stepAddBtn.style.minBlockSize = '2.15rem';
+        stepAddBtn.style.padding = '0.25rem 0.75rem';
+        stepAddBtn.style.fontSize = '0.78rem';
+        stepAddBtn.textContent = '+ Step';
+        addStepRow.append(stepInp, stepAddBtn);
+
+        const actions = document.createElement('div');
+        actions.className = 'goal-card-actions';
+
+        const solveBtn = document.createElement('button');
+        solveBtn.type = 'button';
+        solveBtn.className = 'pill-cta';
+        solveBtn.style.minBlockSize = '2.125rem';
+        solveBtn.style.padding = '0.35rem 0.9rem';
+        solveBtn.style.fontSize = '0.8rem';
+        solveBtn.dataset.goalAction = 'solve-ai';
+        solveBtn.textContent = 'Solve with NEXA';
+
+        const toggleSolveBtn = document.createElement('button');
+        toggleSolveBtn.type = 'button';
+        toggleSolveBtn.className = 'ghost-btn';
+        toggleSolveBtn.style.minBlockSize = '2.125rem';
+        toggleSolveBtn.style.padding = '0.35rem 0.85rem';
+        toggleSolveBtn.style.fontSize = '0.8rem';
+        toggleSolveBtn.dataset.goalAction = 'toggle-solved';
+        toggleSolveBtn.textContent = goal.solved ? 'Reopen Goal' : 'Mark Solved';
+
+        actions.append(solveBtn, toggleSolveBtn);
+        card.append(top, title, progressWrap, ul, addStepRow, actions);
+        el.goalList.appendChild(card);
+      }
+    }
+
+    el.goalFilterGroup.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-goal-filter]');
+      if (!btn) return;
+      state.goalFilter = btn.dataset.goalFilter;
+      el.goalFilterGroup.querySelectorAll('[data-goal-filter]').forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === btn));
+      });
+      renderGoals();
+    });
+
+    el.goalCreateForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = el.newGoalInput.value.trim();
+      if (!title) return;
+      const goal = {
+        id: `g_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        title,
+        mode: el.newGoalMode.value || state.mode,
+        solved: false,
+        createdAt: Date.now(),
+        steps: [
+          { id: `gs_${Date.now()}_1`, text: 'Clarify the exact deliverable & constraints', done: false },
+          { id: `gs_${Date.now()}_2`, text: 'Execute the first concrete milestone', done: false }
+        ]
+      };
+      state.goals.unshift(goal);
+      saveGoals();
+      el.newGoalInput.value = '';
+      renderGoals();
+      fluidSim.triggerConversationPulse('user');
+      showToast('Goal added');
+    });
+
+    el.goalList.addEventListener('change', (e) => {
+      const cb = e.target.closest('[data-goal-action="toggle-step"]');
+      if (!cb) return;
+      const card = cb.closest('.goal-card');
+      const goal = state.goals.find((g) => g.id === card?.dataset.goalId);
+      const step = goal?.steps.find((s) => s.id === cb.dataset.stepId);
+      if (!step) return;
+      step.done = cb.checked;
+      if (goal.steps.length > 0 && goal.steps.every((s) => s.done) && !goal.solved) {
+        goal.solved = true;
+        recordActivity('goalsSolved', 1);
+        fluidSim.triggerConversationPulse('ai');
+        showToast('Goal solved! Great momentum.');
+      }
+      saveGoals();
+      renderGoals();
+    });
+
+    el.goalList.addEventListener('submit', (e) => {
+      const form = e.target.closest('[data-goal-action="add-step-form"]');
+      if (!form) return;
+      e.preventDefault();
+      const card = form.closest('.goal-card');
+      const goal = state.goals.find((g) => g.id === card?.dataset.goalId);
+      const input = form.querySelector('input');
+      const text = input?.value.trim();
+      if (!goal || !text) return;
+      goal.steps.push({ id: `gs_${Date.now()}`, text, done: false });
+      goal.solved = false;
+      saveGoals();
+      renderGoals();
+    });
+
+    el.goalList.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-goal-action]');
+      if (!btn || btn.dataset.goalAction === 'toggle-step') return;
+      const card = btn.closest('.goal-card');
+      const goal = state.goals.find((g) => g.id === card?.dataset.goalId);
+      if (!goal) return;
+
+      const action = btn.dataset.goalAction;
+      if (action === 'delete') {
+        state.goals = state.goals.filter((g) => g.id !== goal.id);
+        saveGoals();
+        renderGoals();
+        showToast('Goal removed');
+      } else if (action === 'toggle-solved') {
+        goal.solved = !goal.solved;
+        if (goal.solved) {
+          recordActivity('goalsSolved', 1);
+          fluidSim.triggerConversationPulse('ai');
+          showToast('Goal marked solved!');
+        }
+        saveGoals();
+        renderGoals();
+      } else if (action === 'solve-ai') {
+        applyFocusMode(goal.mode || state.mode, false);
+        switchPage('chat');
+        startNewChat();
+        const pendingSteps = (goal.steps || []).filter((s) => !s.done).map((s) => s.text);
+        const contextSuffix = pendingSteps.length
+          ? ` — remaining steps: ${pendingSteps.join('; ')}`
+          : ' — break it into actionable steps and give me the first concrete move.';
+        sendUserMessage(`Help me solve my goal: "${goal.title}"${contextSuffix}`);
+      }
+    });
+
+    // --------------------------------------------------------------------------
+    // 16. Analytics Dashboard Engine
+    // --------------------------------------------------------------------------
+    function renderAnalytics() {
+      let totalMessages = 0;
+      let userPrompts = 0;
+      let assistantWords = 0;
+      const modeCounts = { 'deep-work': 0, 'code': 0, 'creative': 0, 'concise': 0 };
+
+      for (const thread of state.threads) {
+        for (const m of thread.messages || []) {
+          if (m.isError) continue;
+          totalMessages++;
+          if (m.role === 'user') {
+            userPrompts++;
+            const mMode = thread.mode || 'deep-work';
+            if (modeCounts[mMode] !== undefined) modeCounts[mMode]++;
+          } else if (m.role === 'assistant' && m.content) {
+            const words = m.content.trim().split(/\s+/).filter(Boolean).length;
+            assistantWords += words;
+            if (m.mode && modeCounts[m.mode] !== undefined) modeCounts[m.mode]++;
+          }
+        }
+      }
+
+      const solvedGoals = state.goals.filter((g) => g.solved).length;
+      const totalGoals = state.goals.length;
+      const goalPct = totalGoals ? Math.round((solvedGoals / totalGoals) * 100) : 0;
+
+      const todayStats = state.activity[todayKey(0)] || { messages: 0, goalsSolved: 0 };
+      const topModeEntry = Object.entries(modeCounts).sort((a, b) => b[1] - a[1])[0];
+      const topModeLabel = topModeEntry && topModeEntry[1] > 0
+        ? FOCUS_MODES[topModeEntry[0]].label
+        : FOCUS_MODES[state.mode].label;
+
+      el.kpiMessages.textContent = String(totalMessages);
+      el.kpiMessagesSub.textContent = `${userPrompts} prompts sent`;
+      el.kpiThreads.textContent = String(state.threads.length);
+      el.kpiWordsSub.textContent = `${assistantWords.toLocaleString()} words generated`;
+      el.kpiGoals.textContent = `${solvedGoals}/${totalGoals}`;
+      el.kpiGoalsSub.textContent = `${goalPct}% completion`;
+      el.kpiToday.textContent = String((todayStats.messages || 0) + (todayStats.goalsSolved || 0));
+      el.kpiTopMode.textContent = `Top: ${topModeLabel}`;
+
+      // Focus mode bars
+      const totalModeHits = Math.max(1, Object.values(modeCounts).reduce((a, b) => a + b, 0));
+      el.analyticsModeBars.replaceChildren();
+      for (const [key, cfg] of Object.entries(FOCUS_MODES)) {
+        const count = modeCounts[key] || 0;
+        const share = Math.round((count / totalModeHits) * 100);
+        const row = document.createElement('div');
+        row.className = 'mode-bar-row';
+        row.innerHTML =
+          `<div class="mode-bar-meta"><span>${cfg.label}</span><span>${count} (${share}%)</span></div>` +
+          `<div class="mode-bar-track"><div class="mode-bar-fill" style="width:${share}%; background:${cfg.accent};"></div></div>`;
+        el.analyticsModeBars.appendChild(row);
+      }
+
+      // 7-Day Activity SVG Chart
+      const days = [];
+      for (let i = -6; i <= 0; i++) {
+        const key = todayKey(i);
+        const dt = new Date(`${key}T12:00:00`);
+        const label = dt.toLocaleDateString(undefined, { weekday: 'short' });
+        const rec = state.activity[key] || { messages: 0, goalsSolved: 0 };
+        days.push({ label, total: (rec.messages || 0) + (rec.goalsSolved || 0) * 2 });
+      }
+      const maxVal = Math.max(4, ...days.map((d) => d.total));
+      const svgParts = [];
+      days.forEach((d, idx) => {
+        const x = 16 + idx * 44;
+        const barH = Math.max(4, Math.round((d.total / maxVal) * 92));
+        const y = 112 - barH;
+        const isToday = idx === 6;
+        svgParts.push(
+          `<rect x="${x}" y="${y}" width="24" height="${barH}" rx="6" fill="${isToday ? 'var(--accent)' : 'rgba(255,255,255,0.22)'}"></rect>`,
+          `<text x="${x + 12}" y="${Math.max(12, y - 5)}" text-anchor="middle" fill="#eef0f6" font-size="10">${d.total}</text>`,
+          `<text x="${x + 12}" y="132" text-anchor="middle" fill="#b9becf" font-size="10">${d.label}</text>`
+        );
+      });
+      el.analyticsActivitySvg.innerHTML = svgParts.join('');
+
+      const avgWords = totalMessages > userPrompts
+        ? Math.round(assistantWords / Math.max(1, totalMessages - userPrompts))
+        : 0;
+      const engineLabel = state.settings.endpoint?.trim()
+        ? 'Custom Endpoint'
+        : (state.settings.apiKey?.trim() ? (state.settings.model || DEFAULT_GEMINI_MODEL) : 'Built-in Demo');
+      const profileName = state.session?.name || 'Guest';
+
+      el.analyticsInsights.innerHTML =
+        `<span>Avg reply: <strong>${avgWords} words</strong></span>` +
+        `<span>Engine: <strong>${escapeHtml(engineLabel)}</strong></span>` +
+        `<span>Profile: <strong>${escapeHtml(profileName)}</strong></span>`;
+    }
+
+    el.resetAnalyticsBtn.addEventListener('click', () => {
+      state.activity = {};
+      try { localStorage.removeItem(STORAGE_KEYS.activity); } catch {}
+      renderAnalytics();
+      showToast('Daily activity reset');
+    });
+
+    // --------------------------------------------------------------------------
+    // 17. Boot Sequence
     // --------------------------------------------------------------------------
     applyFocusMode(state.mode, false);
+    renderAuthGate();
     renderThread();
     renderHistoryList();
+    renderGoals();
+    renderAnalytics();
     initLenis();
 
     requestAnimationFrame(() => {
